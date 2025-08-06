@@ -9,45 +9,69 @@ sap.ui.define([
         onInit: function () {
             const oVendorModel = new sap.ui.model.json.JSONModel([]);
             this.getView().setModel(oVendorModel, "VendorPortalModel");
+        
             const oODataModel = this.getOwnerComponent().getModel("vendorModel");
             const oFilterModel = new sap.ui.model.json.JSONModel();
             const oTableModel = new sap.ui.model.json.JSONModel();
             const oRouteData = new sap.ui.model.json.JSONModel();
-            const oPoModelVh = new sap.ui.model.json.JSONModel();
-            const oPgModelVh = new sap.ui.model.json.JSONModel();
             const oPlantModelVh = new sap.ui.model.json.JSONModel();
+            const oCompanyModel = new sap.ui.model.json.JSONModel();
+        
+            this.getView().setModel(oCompanyModel, "CompanyCodeModel");
             this.getView().setModel(oPlantModelVh, "PlantModelVh");
-            this.getView().setModel(oPgModelVh, "PgModelVh");
-            this.getView().setModel(oPoModelVh, "PoModelVh");
             this.getOwnerComponent().setModel(oFilterModel, "filterModel");
             this.getOwnerComponent().setModel(oTableModel, "TableModelPO");
             this.getOwnerComponent().setModel(oRouteData, "RoutePoData");
             this.getView().setModel(oFilterModel, "FilterModel");
-
+        
             const oBusyDialog = new sap.m.BusyDialog({ text: "Loading data..." });
+            oBusyDialog.open();
+        
             let that = this;
-
-            // Models.loadFilterData(oODataModel, oFilterModel)
-            //     .then(() => {
-            //         return Models.fetchVendorPortalData(oODataModel, oVendorModel);
-            //     })
-            //     .then(() => {
-            //         oBusyDialog.close();
-            //     })
-            //     .catch((err) => {
-            //         oBusyDialog.close();
-            //         sap.m.MessageToast.show("Failed to load data");
-            //         console.error("Initialization Error:", err);
-            //     });
-
+        
+            // Load PO data and build company code model
+            Models._loadPurchaseOrders(this, "", 0, 4999).then((result) => {
+                const uniqueCompanies = [...new Map(
+                    result
+                        .filter(item => item.CompanyCode)
+                        .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode }])
+                ).values()];
+        
+                that.getView().getModel("CompanyCodeModel").setData(uniqueCompanies);
+                that.getView().byId("idPoCompanyCode")?.getBinding("items")?.refresh();
+        
+                console.log("Company codes loaded:", that.getView().getModel("CompanyCodeModel").getData());
+        
+                // ✅ Load dependent filters AFTER company codes are set
+                that._loadAllFilters();
+        
+                oBusyDialog.close();
+            }).catch((oError) => {
+                oBusyDialog.close();
+                console.error("Failed to load Purchase Orders:", oError);
+            });
         },
+        _loadAllFilters: function () {
+            // Now CompanyCodeModel is ready, load other filters that depend on it
+            console.log("Now loading filters using CompanyCodeModel");
+        
+            const aCompanyCodes = this.getView().getModel("CompanyCodeModel")?.getData();
+        
+            // Example: preselect first company, or filter something else
+            if (aCompanyCodes?.length === 1) {
+                this.getView().byId("idPoCompanyCode").setSelectedKey(aCompanyCodes[0].CompanyCode);
+            }
+        
+            // You can also load SupplierVh, PlantVh, etc., from here safely
+        },
+        
         formatter: Formatter,
         onSearch: function (oEvent) {
             const oView = this.getView();
             const oModel = this.getOwnerComponent().getModel("vendorModel"); // OData model
             const oTableModel = this.getOwnerComponent().getModel("TableModelPO"); // Target model for results
             const oFilterModel = this.getOwnerComponent().getModel("FilterModel");
-            Models.searchPoHeader(oView, oModel, oTableModel)
+            Models.searchPoHeader(this, oView, oModel, oTableModel)
 
         },
         onLineItemPress: function (oEvent) {
@@ -87,21 +111,33 @@ sap.ui.define([
             this._oSupplierDialog.setModel(oView.getModel("SupplierVHModel"));
             this._oSupplierDialog.open();
         },
-        
-        onSupplierSearch: function (oEvent) {
-            let sValue = oEvent.getParameter("value");
-            let aFilters = [
-                new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.Contains, sValue),
-                new sap.ui.model.Filter("BPSupplierName", sap.ui.model.FilterOperator.Contains, sValue),
-                new sap.ui.model.Filter("BPAddrCityName", sap.ui.model.FilterOperator.Contains, sValue)
-            ];
 
-            let oBinding = oEvent.getSource().getBinding("items");
-            oBinding.filter(new sap.ui.model.Filter(aFilters, false));
+        onSupplierSearch: function (oEvent) {
+            let sQuery = oEvent.getParameter("value")?.trim().toLowerCase();
+            let aFilters = [
+                new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.Contains, sQuery),
+                new sap.ui.model.Filter("Suppliername", sap.ui.model.FilterOperator.Contains, sQuery),
+                new sap.ui.model.Filter("PurchasingGroup", sap.ui.model.FilterOperator.Contains, sQuery),
+                new sap.ui.model.Filter("PurchasingGrpName", sap.ui.model.FilterOperator.Contains, sQuery)
+            ];
+            const oModel = this.getView().getModel("SupplierVHModel");
+            const aAllPo = oModel.getData() || [];
+            const aFilteredPo = aAllPo.filter(item =>
+                Object.values(item).some(val =>
+                    String(val).toLowerCase().includes(sQuery)
+                )
+            );
+
+            if (aFilteredPo.length > 0) {
+                // Use filtered data from local cache
+                this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["Suppliername", "PurchasingGroup", "PurchasingGrpName", "Supplier"]);
+
+            } else {
+                let oBinding = oEvent.getSource().getBinding("items");
+                oBinding.filter(new sap.ui.model.Filter(aFilters, false));
+            }
         },
-        onSupplierCancel: function () {
-            // Optional: Handle cancel if needed
-        },
+
         onSupplierConfirm: function (oEvent) {
             let aSelectedContexts = oEvent.getParameter("selectedContexts");
             let oMultiInput = this.byId("idPoSupplier");
@@ -112,7 +148,7 @@ sap.ui.define([
                     let oData = oContext.getObject();
                     oMultiInput.addToken(new sap.m.Token({
                         key: oData.Supplier,
-                        text: oData.Supplier + " - " + oData.BPSupplierName
+                        text: oData.Supplier + " - " + oData.Suppliername
                     }));
                 });
             }
@@ -124,50 +160,10 @@ sap.ui.define([
                 this._oPoDialog = sap.ui.xmlfragment("hodek.vendorportal.fragments.PurchaseOrderValueHelp", this);
                 oView.addDependent(this._oPoDialog);
             }
+            this._oPoDialog.open();
 
-            // Initialize flags
-            this._poSearchQuery = "";
-            this._poSkip = 0;
-            this._poHasMore = true;
-            this._poDialogOpened = false;
-            this._initialLoadDone = false;
-
-            this._oPoDialog.setBusy(true);
-
-            Models._loadPurchaseOrders(this, "", 0, 2000, (aData) => {
-                const uniqueResults = aData.filter((item, index, self) =>
-                    index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-                );
-                let oModel = this.getView().getModel("PoModelVh");
-                oModel.setProperty("/PurchaseOrders", uniqueResults);
-                // this._poSkip += aData.length;
-                // this._poDialogOpened = true;
-                // this._initialLoadDone = true;
-                this._oPoDialog.setBusy(false);
-                this._oPoDialog.open();
-            });
         },
-        // onPurchaseOrderUpdateStarted: function () {
-        //     // Prevent firing on initial data load
-        //     console.log("triggered--")
-        //     if (!this._poDialogOpened || !this._poHasMore || !this._initialLoadDone) { return };
 
-
-
-        //     this._oPoDialog.setBusy(true);
-
-        //     Models._loadPurchaseOrders(this, this._poSearchQuery, this._poSkip, 2000, (aNewData) => {
-        //         const uniqueResults = aNewData.filter((item, index, self) =>
-        //             index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-        //         );
-        //         let oModel = this.getView().getModel("PoModelVh");
-        //         let aOldData = oModel.getProperty("/PurchaseOrders") || [];
-        //         oModel.setProperty("/PurchaseOrders", aOldData.concat(uniqueResults));
-        //         this._poSkip += aNewData.length;
-        //         this._poHasMore = aNewData.length === 2000;
-        //         this._oPoDialog.setBusy(false);
-        //     });
-        // },
         onPurchaseOrderSearch: function (oEvent) {
             let sQuery = oEvent.getParameter("value")?.trim().toLowerCase();
             this._poSearchQuery = sQuery;
@@ -190,17 +186,14 @@ sap.ui.define([
 
             } else {
                 this._oPoDialog.setBusy(true);
-
-                Models._loadPurchaseOrders(this, sQuery, 0, 2000, (aData) => {
-                    const uniqueResults = aData.filter((item, index, self) =>
-                        index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-                    );
-                    let oModel = this.getView().getModel("PoModelVh");
-                    oModel.setProperty("/PurchaseOrders", uniqueResults);
-                    // this._poSkip += aData.length;
-                    // this._poHasMore = aData.length === 2000;
-                    this._oPoDialog.setBusy(false);
-                });
+                Models._loadPurchaseOrders(this, sQuery, 0, 2000)
+                    .then(() => {
+                        this._oPoDialog.setBusy(false); // ✅ Stop busy after success
+                    })
+                    .catch((oError) => {
+                        this._oPoDialog.setBusy(false); // ✅ Also stop busy on error
+                        console.error("Failed to load Purchase Orders:", oError);
+                    });
             }
         },
         onPurchaseOrderConfirm: function (oEvent) {
@@ -208,9 +201,11 @@ sap.ui.define([
             let oMultiInput = this.byId("idPoNumber");
             let oInputSupplier = this.byId("idPoSupplier");
             let oInputPurchaseGrp = this.byId("idPoPurchGroup");
+            let oInputPlant = this.byId("idFilterPlant");
             oInputSupplier.removeAllTokens();
             oInputPurchaseGrp.removeAllTokens();
             oMultiInput.removeAllTokens();
+            oInputPlant.removeAllTokens();
 
             if (aSelectedContexts && aSelectedContexts.length) {
                 aSelectedContexts.forEach(function (oContext) {
@@ -227,9 +222,14 @@ sap.ui.define([
                         key: oData.PurchasingGroup,
                         text: oData.PurchasingGroup
                     }));
+                    oInputPlant.addToken(new sap.m.Token({
+                        key: oData.Plant,
+                        text: oData.Plant
+                    }));
                 });
             }
         },
+
         onPurchasingGroupValueHelp: function () {
             let oView = this.getView();
 
@@ -237,47 +237,8 @@ sap.ui.define([
                 this._oPgDialog = sap.ui.xmlfragment("hodek.vendorportal.fragments.PurchasingGroupValueHelp", this);
                 oView.addDependent(this._oPgDialog);
             }
-
-            this._pgSearchQuery = "";
-            this._pgSkip = 0;
-            this._pgHasMore = true;
-            this._pgDialogOpened = false;
-            this._pgInitialLoadDone = false;
-
-            this._oPgDialog.setBusy(true);
-
-            Models._loadPurchasingGroups(this, "", 0, 2000, (aData) => {
-                const uniqueResults = aData.filter((item, index, self) =>
-                    index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-                );
-                let oModel = this.getView().getModel("PgModelVh");
-                oModel.setProperty("/PurchasingGroups", uniqueResults);
-                this._pgSkip += aData.length;
-                this._pgDialogOpened = true;
-                this._pgInitialLoadDone = true;
-                this._oPgDialog.setBusy(false);
-                this._oPgDialog.open();
-            });
+            this._oPgDialog.open();
         },
-
-        // onPurchasingGroupUpdateStarted: function () {
-        //     if (!this._pgDialogOpened || !this._pgHasMore || !this._pgInitialLoadDone) return;
-
-        //     this._oPgDialog.setBusy(true);
-
-        //     Models._loadPurchasingGroups(this, this._pgSearchQuery, this._pgSkip, 2000, (aNewData) => {
-        //         const uniqueResults = aNewData.filter((item, index, self) =>
-        //             index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-        //         );
-        //         let oModel = this.getView().getModel("PgModelVh");
-        //         let aOldData = oModel.getProperty("/PurchasingGroups") || [];
-        //         oModel.setProperty("/PurchasingGroups", aOldData.concat(uniqueResults));
-        //         this._pgSkip += aNewData.length;
-        //         this._pgHasMore = aNewData.length === 2000;
-        //         this._oPgDialog.setBusy(false);
-        //     });
-        // },
-
         onPurchasingGroupSearch: function (oEvent) {
             let sQuery = oEvent.getParameter("value")?.trim().toLowerCase();
             this._pgSearchQuery = sQuery;
@@ -286,30 +247,11 @@ sap.ui.define([
             const oModel = this.getView().getModel("PgModelVh");
             const aAllPurchaseGroup = oModel.getProperty("/PurchasingGroups") || [];
 
-            // Filter existing local data
-            const aFilteredPurchaseGroup = aAllPurchaseGroup.filter(item =>
-                Object.values(item).some(val =>
-                    String(val).toLowerCase().includes(sQuery)
-                )
-            ); 
-            if (aFilteredPurchaseGroup.length > 0) {
-                // Use filtered data from local cache
-                this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["PurchaseOrder", "PurchasingGroup", "Supplier"]);
 
-            } else {
-                this._oPgDialog.setBusy(true);
+            // Use filtered data from local cache
+            this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["PurchaseOrder", "PurchasingGroup", "Supplier"]);
 
-                Models._loadPurchasingGroups(this, sQuery, 0, 2000, (aData) => {
-                    const uniqueResults = aData.filter((item, index, self) =>
-                        index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-                    );
-                    let oModel = this.getView().getModel("PgModelVh");
-                    oModel.setProperty("/PurchasingGroups", uniqueResults);
-                    // this._pgSkip += aData.length;
-                    // this._pgHasMore = aData.length === 2000;
-                    this._oPgDialog.setBusy(false);
-                });
-            }
+
         },
         onPurchasingGroupConfirm: function (oEvent) {
             let aSelectedContexts = oEvent.getParameter("selectedContexts");
@@ -326,6 +268,7 @@ sap.ui.define([
                 });
             }
         },
+
         onPlantValueHelp: function () {
             let oView = this.getView();
 
@@ -355,25 +298,6 @@ sap.ui.define([
                 this._oPlantDialog.open();
             });
         },
-
-        // onPlantUpdateStarted: function () {
-        //     if (!this._plantDialogOpened || !this._plantHasMore || !this._plantInitialLoadDone) return;
-
-        //     this._oPlantDialog.setBusy(true);
-
-        //     Models._loadPlants(this, this._plantSearchQuery, this._plantSkip, 2000, (aNewData) => {
-        //         const uniqueResults = aNewData.results.filter((item, index, self) =>
-        //             index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-        //         );
-        //         let oModel = this.getView().getModel("PlantModelVh");
-        //         let aOldData = oModel.getProperty("/Plants") || [];
-        //         oModel.setProperty("/Plants", aOldData.concat(uniqueResults));
-        //         this._plantSkip += aNewData.length;
-        //         this._plantHasMore = aNewData.length === 2000;
-        //         this._oPlantDialog.setBusy(false);
-        //     });
-        // },
-
         onPlantSearch: function (oEvent) {
             let sQuery = oEvent.getParameter("value")?.trim().toLowerCase();
             this._plantSearchQuery = sQuery;

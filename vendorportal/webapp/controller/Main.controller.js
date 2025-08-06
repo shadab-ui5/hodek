@@ -8,16 +8,25 @@ sap.ui.define([
 
         onInit: function () {
             let that = this;
-            
+            const oPoModelVh = new sap.ui.model.json.JSONModel();
+            const oSupplierVHModel = new sap.ui.model.json.JSONModel([]);
+            const oPgVHModel = new sap.ui.model.json.JSONModel([]);
+            this.getOwnerComponent().setModel(oSupplierVHModel, "SupplierVHModel");
+            this.getOwnerComponent().setModel(oPgVHModel, "PgVHModel");
+            this.getOwnerComponent().setModel(oPoModelVh, "PoModelVh");
             if (sap.ushell && sap.ushell.Container) {
                 sap.ushell.Container.getServiceAsync("UserInfo").then(function (UserInfo) {
                     let loginUser = UserInfo.getId();
-                    Models.getUserInfo(that, loginUser);
+                    Models.getUserInfo(that, loginUser).then(() => { console.log("UserInfo Loaded..") }).catch((oError) => {
+                        console.error("Failed to load Purchase Orders:", oError);
+                    });
                 });
             } else {
                 console.warn("Not running in Fiori Launchpad, using fallback user");
                 let loginUser = "CB9980000026"; // fallback or hardcoded for local testing
-                Models.getUserInfo(that, loginUser);
+                Models.getUserInfo(that, loginUser).then(() => { console.log("UserInfo Loaded..") }).catch((oError) => {
+                    console.error("Failed to load Purchase Orders:", oError);
+                });;
             }
             this.oRouter = sap.ui.core.UIComponent.getRouterFor(this);
             this.oRouter.attachRouteMatched(this._onRouteMatched, this);

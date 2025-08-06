@@ -12,8 +12,8 @@
         updateStarted=".onPurchaseOrderUpdateStarted" class="sapUiResponsiveContentPadding">
         
         <columns>
-            <Column><Text text="PO Number"/></Column>
-            <Column><Text text="Supplier"/></Column>
+            <Column width="15%"><Text text="PO Number"/></Column>
+            <Column width="30%"><Text text="Supplier"/></Column>
             <Column><Text text="Company Code"/></Column>
             <Column><Text text="Purchasing Group"/></Column>
             <Column><Text text="Plant"/></Column>
@@ -22,8 +22,8 @@
         <items>
             <ColumnListItem>
                 <cells>
-                    <Text text="{PoModelVh>PurchaseOrder}" />
-                    <Text text="{PoModelVh>Supplier}" />
+                    <Text text="{parts:[{path:'PoModelVh>PurchaseOrder'},{path:'PoModelVh>purchaseOrderText'}],formatter:'.formatter.formatPurchaseOrderText'}" />
+                    <Text text="{PoModelVh>SupplierName} ( {PoModelVh>Supplier} )" />
                     <Text text="{PoModelVh>CompanyCode}" />
                     <Text text="{PoModelVh>PurchasingGroup}" />
                     <Text text="{PoModelVh>Plant}" />

@@ -10,51 +10,49 @@
             <f:title>
                 <f:DynamicPageTitle id="_IDGenDynamicPageTitle1">
                     <f:navigationActions>
-                        <Button text="Next" type="Success" icon="sap-icon://open-command-field" press="onNavNext"/>
+                        <Button id="_IDGenButton4" text="Next" type="Success" icon="sap-icon://open-command-field" press="onNavNext"/>
                     </f:navigationActions>
                     <f:heading>
                         <Title id="_IDGenTitle4" text="{RoutePoData>/PoHeader/PurchaseOrder}" level="H1"/>
                     </f:heading>
                     <f:expandedContent>
-                        <!-- <HBox alignContent="Center" width="100%">
-                        <Button text="Back" icon="sap-icon://nav-back" press="onNavBack"/>
-                    </HBox> -->
+                        <Label id="_IDGenLabel15" text="{=${RoutePoData>/PoHeader/purchaseOrderText}?${RoutePoData>/PoHeader/purchaseOrderText}:'NA'}"/>
+
                     </f:expandedContent>
                     <f:snappedContent>
-                        <!-- <HBox alignContent="Center" width="100%">
-                        <Button text="Back" icon="sap-icon://nav-back" press="onNavBack"/>
-                    </HBox> -->
+                        <Label id="_IDGenLabel16" text="{=${RoutePoData>/PoHeader/purchaseOrderText}?${RoutePoData>/PoHeader/purchaseOrderText}:'NA'}"/>
+
                     </f:snappedContent>
                 </f:DynamicPageTitle>
             </f:title>
             <f:header>
                 <f:DynamicPageHeader id="_IDGenDynamicPageHeader1">
                     <f:content>
-                        <HBox Vd="_IDGenHBox" alignItems="Center" justifyContent="Start">
-                            <VBox alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
-                                <Label class="labelDesin" design="Bold" text="Plant" />
+                        <HBox id="_IDGenHBox" alignItems="Center" justifyContent="Start">
+                            <VBox id="_IDGenVBox15" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
+                                <Label id="_IDGenLabel17" class="labelDesin" design="Bold" text="Plant" />
                                 <!-- <Text id="idPoHeadPlant" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/PlantName}"/> -->
-                                <Text class="textDesin" text="{RoutePoData>/PoHeader/Plant}" />
+                                <Text id="_IDGenText19" class="textDesin" text="{RoutePoData>/PoHeader/Plant}" />
                             </VBox>
-                            <VBox alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
-                                <Label class="labelDesin" design="Bold" text="Purchase Order" />
+                            <VBox id="_IDGenVBox16" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
+                                <Label id="_IDGenLabel18" class="labelDesin" design="Bold" text="Purchase Order" />
                                 <!-- <Text id="idPoHeadPO" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/PurchaseOrder}"/> -->
-                                <Text class="textDesin" text="{RoutePoData>/PoHeader/PurchaseOrder}" />
+                                <Text id="_IDGenText20" class="textDesin" text="{RoutePoData>/PoHeader/PurchaseOrder}" />
                             </VBox>
-                            <VBox alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
-                                <Label class="labelDesin" design="Bold" text="Supplier" />
+                            <VBox id="_IDGenVBox17" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
+                                <Label id="_IDGenLabel19" class="labelDesin" design="Bold" text="Supplier" />
                                 <!-- <Text id="idPoHeadSupplier" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/Supplier}"/> -->
-                                <Text class="textDesin" text="{RoutePoData>/PoHeader/Supplier}" />
+                                <Text id="_IDGenText21" class="textDesin" text="{RoutePoData>/PoHeader/Supplier}" />
                             </VBox>
-                            <VBox alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
-                                <Label class="labelDesin" design="Bold" text="Purchase Order Date" />
+                            <VBox id="_IDGenVBox18" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
+                                <Label id="_IDGenLabel20" class="labelDesin" design="Bold" text="Purchase Order Date" />
                                 <!-- <Text id="idPoHeadOrderDate" class="sapUiTinyMarginBegin" text="{path: 'RoutePoData>/PoHeader/PurchaseOrderDate',formatter: '.formatter.formatDateToDDMMYYYY'}"/> -->
-                                <Text class="textDesin" text="{path: 'RoutePoData>/PoHeader/PurchaseOrderDate',formatter: '.formatter.formatDateToDDMMYYYY'}"/>
+                                <Text id="_IDGenText22" class="textDesin" text="{path: 'RoutePoData>/PoHeader/PurchaseOrderDate',formatter: '.formatter.formatDateToDDMMYYYY'}"/>
                             </VBox>
-                            <VBox alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
-                                <Label class="labelDesin" design="Bold" text="Sales Person" />
+                            <VBox id="_IDGenVBox19" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
+                                <Label id="_IDGenLabel21" class="labelDesin" design="Bold" text="Sales Person" />
                                 <!-- <Text id="idPoHeadSalesPerson" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/SupplierRespSalesPersonName}"/> -->
-                                <Text class="textDesin" text="{RoutePoData>/PoHeader/SupplierRespSalesPersonName}"/>
+                                <Text id="_IDGenText23" class="textDesin" text="{RoutePoData>/PoHeader/SupplierRespSalesPersonName}"/>
                             </VBox>
 
                         </HBox>
@@ -79,39 +77,39 @@
                         </OverflowToolbar>
                     </infoToolbar>
                     <columns>
-                        <Column visible="false">
-                            <Text text="Purchase Order" />
+                        <Column id="_IDGenColumn6" visible="false">
+                            <Text id="_IDGenText24" text="Purchase Order" />
                         </Column>
-                        <Column>
-                            <Text text="Item" />
+                        <Column id="_IDGenColumn8">
+                            <Text id="_IDGenText25" text="Item" />
                         </Column>
-                        <Column>
-                            <Text text="Plant" />
+                        <Column id="_IDGenColumn9">
+                            <Text id="_IDGenText26" text="Plant" />
                         </Column>
-                        <Column>
-                            <Text text="Material" />
+                        <Column id="_IDGenColumn10">
+                            <Text id="_IDGenText27" text="Material" />
                         </Column>
-                        <Column>
-                            <Text text="Delivery Date" />
+                        <Column id="_IDGenColumn11">
+                            <Text id="_IDGenText28" text="Delivery Date" />
                         </Column>
-                        <Column>
-                            <Text text="Scheduled Qty" />
+                        <Column id="_IDGenColumn12">
+                            <Text id="_IDGenText29" text="Scheduled Qty" />
                         </Column>
-                        <Column>
-                            <Text text="Delivered Qty" />
+                        <Column id="_IDGenColumn13">
+                            <Text id="_IDGenText30" text="Delivered Qty" />
                         </Column>
                     </columns>
 
                     <items>
-                        <ColumnListItem >
+                        <ColumnListItem id="_IDGenColumnListItem1">
                             <cells>
-                                <Text text="{PoItemModel>PurchaseOrder}" />
-                                <Text text="{PoItemModel>PurchaseOrderItem}" />
-                                <Text text="{PoItemModel>Plant}" />
-                                <Text text="{PoItemModel>ItemDescription}({PoItemModel>Material})" />
-                                <Text text="{path: 'PoItemModel>DeliveryDate', formatter: '.formatter.formatDateToDDMMYYYY'}" />
-                                <Text text="{PoItemModel>ScheduleQty} {PoItemModel>PurchaseOrderQuantityUnit}" />
-                                <Text text="{PoItemModel>DeliveredQty} {PoItemModel>PurchaseOrderQuantityUnit}" />
+                                <Text id="_IDGenText31" text="{PoItemModel>PurchaseOrder}" />
+                                <Text id="_IDGenText32" text="{PoItemModel>PurchaseOrderItem}" />
+                                <Text id="_IDGenText33" text="{PoItemModel>Plant}" />
+                                <Text id="_IDGenText34" text="{PoItemModel>ItemDescription}({PoItemModel>Material})" />
+                                <Text id="_IDGenText35" text="{path: 'PoItemModel>DeliveryDate', formatter: '.formatter.formatDateToDDMMYYYY'}" />
+                                <Text id="_IDGenText36" text="{PoItemModel>ScheduleQty} {PoItemModel>PurchaseOrderQuantityUnit}" />
+                                <Text id="_IDGenText37" text="{PoItemModel>DeliveredQty} {PoItemModel>PurchaseOrderQuantityUnit}" />
                             </cells>
                         </ColumnListItem>
                     </items>

@@ -124,9 +124,9 @@
                                 <Text id="_IDGenText18" text="{AsnItemsModel>PurchaseOrder}" />
                                 <Text id="_IDGenText15" text="{AsnItemsModel>PurchaseOrderItem}"/>
                                 <Text id="_IDGenText16" text="{AsnItemsModel>Material}"/>
-                                <Text id="_IDGenText17" text="{AsnItemsModel>ItemDescription}"/>
+                                <Text id="_IDGenText17" text="{AsnItemsModel>PurchaseOrderItemText}"/>
                                 <!-- <Input id="_IDGenInput" value="{Material}" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="material_RAPOValueHelp"/> -->                               
-                                <Text id="_" text="{AsnItemsModel>UOM}" />
+                                <Text id="_" text="{AsnItemsModel>BaseUnit}" />
                                 <Input id="idInpRAPOItemQuantity" value="{EnteredQuantity}" change="onChangeRAPOItemQuantity" type="Number"  />
 
                             </cells>

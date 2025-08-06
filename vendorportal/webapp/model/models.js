@@ -1,8 +1,9 @@
 sap.ui.define([
     "sap/ui/model/json/JSONModel",
-    "sap/ui/Device"
+    "sap/ui/Device",
+    "hodek/vendorportal/utils/Formatter"
 ],
-    function (JSONModel, Device) {
+    function (JSONModel, Device, Formatter) {
         "use strict";
 
         return {
@@ -16,78 +17,29 @@ sap.ui.define([
                 return oModel;
             },
             getUserInfo: function (_this, sUserid) {
-                const oModel = _this.getOwnerComponent().getModel("vendorModel"); // assuming default model
-
-                oModel.read("/supplierListByUser", {
-                    filters: [
-                        new sap.ui.model.Filter("Userid", sap.ui.model.FilterOperator.EQ, sUserid)
-                    ],
-                    success: function (oData) {
-                        console.log("Fetched supplier list:", oData.results);
-                        let oJSONModel = new sap.ui.model.json.JSONModel(oData.results);
-                        
-                        that.getOwnerComponent().setModel(oData.results, "SupplierVHModel");
-                    },
-                    error: function (oError) {
-                        console.error("Error fetching supplier list", oError);
-                    }
-                });
-
-            },
-
-            loadFilterData: function (oODataModel, oFilterModel) {
-                if (!oODataModel || !oFilterModel) {
-                    console.error("Model.loadFilterData: Invalid arguments.");
-                    return Promise.reject("Invalid model references");
-                }
-
-                return Promise.all([
-                    this.loadPlants(oODataModel, oFilterModel),
-                    this.loadPOHeader(oODataModel, oFilterModel),
-                    this.loadPOItems(oODataModel, oFilterModel)
-                ]);
-            },
-            loadPlants: function (oODataModel, oFilterModel) {
                 return new Promise((resolve, reject) => {
-                    oODataModel.read("/plantVh", {
+                    const oModel = _this.getOwnerComponent().getModel("vendorModel"); // assuming default model
+
+                    oModel.read("/supplierListByUser", {
+                        filters: [
+                            new sap.ui.model.Filter("Userid", sap.ui.model.FilterOperator.EQ, sUserid)
+                        ],
                         success: function (oData) {
-                            oFilterModel.setProperty("/", oData.results);
+                            console.log("Fetched supplier list:", oData.results);
+                            const uniqueGroups = [...new Map(oData.results.map(obj => [obj.PurchasingGroup, obj])).values()];
+                            const oFilterModel = new sap.ui.model.json.JSONModel(uniqueGroups);
+                            _this.getView().setModel(oFilterModel, "PgVHModel");
+                            let oJSONModel = new sap.ui.model.json.JSONModel(oData.results);
+                            _this.getOwnerComponent().setModel(oJSONModel, "SupplierVHModel");
                             resolve();
                         },
-                        error: function (err) {
-                            console.error("Error fetching Plants", err);
-                            reject(err);
+                        error: function (oError) {
+                            console.error("Error fetching supplier list", oError);
+                            reject(oError)
                         }
                     });
-                });
-            },
+                })
 
-            loadPOHeader: function (oODataModel, oFilterModel) {
-                return new Promise((resolve, reject) => {
-                    oODataModel.read("/PoHdr", {
-                        success: function (oData) {
-                            const results = oData.results;
-
-                            const suppliers = [...new Set(results.map(item => item.Supplier))];
-                            const purchasingGroups = [...new Set(results.map(item => item.PurchasingGroup))];
-                            const companyCodes = [...new Set(results.map(item => item.CompanyCode))];
-                            const poDates = [...new Set(results.map(item => item.PurchaseOrderDate))];
-                            const PurchaseOrders = [...new Set(results.map(item => item.PurchaseOrder))];
-
-                            oFilterModel.setProperty("/PurchaseOrders", PurchaseOrders);
-                            oFilterModel.setProperty("/SuppliersFromPO", suppliers);
-                            oFilterModel.setProperty("/PurchasingGroupsFromPO", purchasingGroups);
-                            oFilterModel.setProperty("/CompanyCodesFromPO", companyCodes);
-                            oFilterModel.setProperty("/PODatesFromPO", poDates);
-
-                            resolve();
-                        },
-                        error: function (err) {
-                            console.error("Error fetching PO Headers", err);
-                            reject(err);
-                        }
-                    });
-                });
             },
 
             loadPOItems: function (oODataModel, oModel, filterPO, oTable) {
@@ -117,29 +69,7 @@ sap.ui.define([
                 });
             },
 
-
-            fetchVendorPortalData: function (oModel, VendorPortalModel) {
-
-                if (!oModel) {
-                    console.error("Model 'vendorModel' not found.");
-                    return;
-                }
-
-                // Read all records from 'vendor_portal' entity set
-                oModel.read("/PoHdr", {
-                    success: function (oData) {
-                        console.log("Fetched vendor_portal data:", oData.results);
-
-                        // Store into a JSON model (optional)
-                        VendorPortalModel.setData(oData.results);
-                    }.bind(this),
-                    error: function (oError) {
-                        console.error("Error fetching vendor_portal data", oError);
-                    }
-                });
-            },
-
-            searchPoHeader: function (oView, oModel, oTableModel) {
+            searchPoHeader: function (_this, oView, oModel, oTableModel) {
                 const aFilters = [];
 
                 // Supplier (MultiComboBox)
@@ -149,6 +79,16 @@ sap.ui.define([
                 if (aSelectedSuppliers.length > 0) {
                     const supplierFilters = aSelectedSuppliers.map(s => new sap.ui.model.Filter("Supplier", "EQ", s));
                     aFilters.push(new sap.ui.model.Filter(supplierFilters, false)); // OR condition within supplier group
+                } else {
+                    let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
+                    const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
+                    const oOrFilter = new sap.ui.model.Filter(
+                        uniqueSupplier.map(group =>
+                            new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
+                        ),
+                        false // OR
+                    );
+                    aFilters.push(oOrFilter);
                 }
 
                 // Purchase Order 
@@ -184,11 +124,16 @@ sap.ui.define([
                 }
 
                 // Purchase Order Date
-                const oDatePicker = oView.byId("idPoPurchDate");
-                const oDate = oDatePicker.getDateValue();
-                if (oDate) {
-                    const sDateStr = oDate.toISOString().split("T")[0]; // Format to YYYY-MM-DD
-                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", "EQ", sDateStr));
+                const oDRS = _this.getView().byId("idPoPurchDate");
+                const oStartDate = oDRS.getDateValue();
+                const oEndDate = oDRS.getSecondDateValue();
+
+                if (oStartDate && oEndDate) {
+                    const fromDate = Formatter.formatDateToYyyyMmDd(oStartDate); // "2025-08-07"
+                    const toDate = Formatter.formatDateToYyyyMmDd(oEndDate);     // "2025-08-08"
+
+                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.GE, fromDate));
+                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.LE, toDate));
                 }
                 oView.setBusy(true);
                 // 🔍 Read data from OData service with filters
@@ -216,112 +161,57 @@ sap.ui.define([
                     }
                 });
             },
-            readSupplierVhData: function (oView, sUser, _this) {
-                let that = _this;
-                // Perform manual read with filter
-                let oModel = that.getOwnerComponent().getModel('vendorModel'); // or your named model
-                oModel.read("/SupplierVh", {
-                    filters: [
-                        new sap.ui.model.Filter("CreatedByUser", sap.ui.model.FilterOperator.EQ, sUser)
-                    ],
-                    success: function (oData) {
-                        var aResults = oData.results;
 
-                        // Store in model for dialog use
-                        var oJSONModel = new sap.ui.model.json.JSONModel(aResults);
-                        oView.setModel(oJSONModel, "SupplierVHModel");
+            _loadPurchaseOrders: function (_this, sQuery, iSkip, iTop) {
+                return new Promise((resolve, reject) => {
+                    let oModel = _this.getOwnerComponent().getModel("vendorModel");
+                    let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
+                    const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
 
-                        if (aResults.length === 1) {
-                            // ✅ Automatically select this supplier
-                            var oMultiInput = that.byId("idPoSupplier");
-                            oMultiInput.removeAllTokens();
+                    // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
+                    let aFilters = [];
+                    if (sQuery) {
+                        let oSearch = new sap.ui.model.Filter({
+                            filters: [
+                                new sap.ui.model.Filter("PurchaseOrder", "Contains", sQuery),
+                                new sap.ui.model.Filter("Supplier", "Contains", sQuery)
+                            ],
+                            and: false
+                        });
+                        aFilters.push(oSearch);
+                    } else {
+                        const oOrFilter = new sap.ui.model.Filter(
+                            uniqueSupplier.map(group =>
+                                new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
+                            ),
+                            false // OR
+                        );
+                        aFilters.push(oOrFilter);
+                    }
 
-                            oMultiInput.addToken(new sap.m.Token({
-                                key: aResults[0].Supplier,
-                                text: aResults[0].Supplier + " - " + aResults[0].BPSupplierName
-                            }));
+                    oModel.read("/PoHdr", {
+                        filters: aFilters,
+                        urlParameters: {
+                            "$top": iTop,
+                            "$skip": iSkip
+                        },
+                        success: (oData) => {
+                            const uniqueResults = oData.results.filter((item, index, self) =>
+                                index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
+                            );
+                            let oModel = _this.getOwnerComponent().getModel("PoModelVh");
+                            oModel.setProperty("/PurchaseOrders", uniqueResults);
+                            resolve(oData.results)
 
-                            // Optional: store selected key in your FilterModel if used
-                            var oFilterModel = oView.getModel("FilterModel");
-                            if (oFilterModel) {
-                                oFilterModel.setProperty("/SelectedSuppliers", [aResults[0].Supplier]);
-                            }
+                        },
+                        error: (err) => {
+                            sap.m.MessageToast.show("Error fetching Purchase Orders.");
+                            reject(err)
                         }
-                    },
-                    error: function (oError) {
-                        sap.m.MessageToast.show("Failed to load suppliers");
-                    }
-                });
-            },
-            _loadPurchaseOrders: function (_this, sQuery, iSkip, iTop, fnCallback) {
-                let oModel = _this.getOwnerComponent().getModel("vendorModel");
-
-                let sUser = sap.ushell && sap.ushell.Container
-                    ? sap.ushell.Container.getUser().getId()
-                    : "CB9980000018";
-
-                // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
-                let aFilters = [];
-                if (sQuery) {
-                    let oSearch = new sap.ui.model.Filter({
-                        filters: [
-                            new sap.ui.model.Filter("PurchaseOrder", "Contains", sQuery),
-                            new sap.ui.model.Filter("Supplier", "Contains", sQuery)
-                        ],
-                        and: false
                     });
-                    aFilters.push(oSearch);
-                }
-
-                oModel.read("/PoHdr", {
-                    filters: aFilters,
-                    urlParameters: {
-                        "$top": iTop,
-                        "$skip": iSkip
-                    },
-                    success: (oData) => {
-
-                        fnCallback(oData.results);
-                    },
-                    error: () => {
-                        sap.m.MessageToast.show("Error fetching Purchase Orders.");
-                    }
-                });
+                })
             },
-            _loadPurchasingGroups: function (_this, sQuery, iSkip, iTop, fnCallback) {
-                let oModel = _this.getOwnerComponent().getModel("vendorModel");
 
-                let sUser = sap.ushell?.Container?.getUser()?.getId() || "CB9980000018";
-
-                let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
-                if (sQuery) {
-                    let oSearch = new sap.ui.model.Filter({
-                        filters: [
-                            new sap.ui.model.Filter("PurchasingGroup", "Contains", sQuery),
-                            new sap.ui.model.Filter("CreatedByUser", "Contains", sQuery)
-                        ],
-                        and: false
-                    });
-                    aFilters.push(oSearch);
-                }
-
-                oModel.read("/PurGroupVh", {
-                    filters: aFilters,
-                    urlParameters: {
-                        "$top": iTop,
-                        "$skip": iSkip
-                    },
-                    success: (oData) => {
-                        // const uniqueResults = oData.results.filter((item, index, self) =>
-                        //     index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-                        // );
-                        fnCallback(oData.results);
-                    },
-                    error: () => {
-                        sap.m.MessageToast.show("Error fetching Purchasing Groups.");
-                    }
-                });
-            },
             _loadPlants: function (_this, sQuery, iSkip, iTop, fnCallback) {
                 let oModel = _this.getOwnerComponent().getModel("vendorModel");
 
@@ -356,7 +246,7 @@ sap.ui.define([
             },
             fetchAsnItems: function (_this, oFinalFilter) {
                 let oModel = _this.getOwnerComponent().getModel("vendorModel");
-                oModel.read("/thirdscreen_po", {
+                oModel.read("/ItemforPo", {
                     filters: [oFinalFilter],
                     success: (oData) => {
                         // Set data to a new model to use in table

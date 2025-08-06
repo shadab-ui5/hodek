@@ -14,8 +14,6 @@
         <columns>
             <Column><Text text="Plant"/></Column>
             <Column><Text text="Plant Name"/></Column>
-            <Column><Text text="Valuation Area"/></Column>
-            <Column><Text text="Customer No Plant"/></Column>
         </columns>
 
         <items>
@@ -23,8 +21,6 @@
                 <cells>
                     <Text text="{PlantModelVh>Plant}" />
                     <Text text="{PlantModelVh>PlantName}" />
-                    <Text text="{PlantModelVh>ValuationArea}" />
-                    <Text text="{PlantModelVh>PlantCustomer}" />
                 </cells>
             </ColumnListItem>
         </items>

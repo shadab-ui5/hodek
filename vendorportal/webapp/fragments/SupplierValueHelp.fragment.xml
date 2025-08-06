@@ -17,13 +17,10 @@
                 <Text text="Supplier Name" />
             </Column>
             <Column>
-                <Text text="Full Name" />
+                <Text text="Purchasing Group" />
             </Column>
             <Column>
-                <Text text="City" />
-            </Column>
-            <Column>
-                <Text text="Street" />
+                <Text text="Purchasing Group Name" />
             </Column>
         </columns>
 
@@ -31,10 +28,9 @@
             <ColumnListItem>
                 <cells>
                     <Text text="{SupplierVHModel>Supplier}" />
-                    <Text text="{SupplierVHModel>BPSupplierName}" />
-                    <Text text="{SupplierVHModel>SupplierFullName}" />
-                    <Text text="{SupplierVHModel>BPAddrCityName}" />
-                    <Text text="{SupplierVHModel>BPAddrStreetName}" />
+                    <Text text="{SupplierVHModel>Suppliername}" />
+                    <Text text="{SupplierVHModel>PurchasingGroup}" />
+                    <Text text="{SupplierVHModel>PurchasingGrpName}" />
                 </cells>
             </ColumnListItem>
         </items>

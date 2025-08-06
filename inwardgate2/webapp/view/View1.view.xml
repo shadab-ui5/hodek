@@ -3,7 +3,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:table="sap.ui.table">
-    <Page id="page" title="{i18n>title}" showFooter="true" titleAlignment="Auto">
+    <Page id="page" title="Purchase Orders" showFooter="true" titleAlignment="Auto">
         <Panel class="sapUiContentPadding">
             <HBox>
                 <VBox width="25%">

@@ -46,7 +46,10 @@ sap.ui.define([
         onNavNext: function () {
             const oTable = this.byId("idPoItemTable");
             const aSelectedItems = oTable.getSelectedItems();
-
+            if (!aSelectedItems.length) {
+                sap.m.MessageToast.show('Select atleast One Item');
+                return;
+            }
             const aSelectedData = aSelectedItems.map(oItem =>
                 oItem.getBindingContext("PoItemModel").getObject()
             );

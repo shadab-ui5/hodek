@@ -67,8 +67,8 @@
                             <!-- Company Code -->
                             <fb:FilterGroupItem id="_IDGenFilterGroupItem12" name="CompanyCode" label="Company Code" groupName="Group1" visibleInFilterBar="true">
                                 <fb:control>
-                                    <ComboBox id="idPoCompanyCode" items="{ path: 'FilterModel>/CompanyCodesFromPO' }">
-                                        <core:Item id="_IDGenItem11" key="{FilterModel>}" text="{FilterModel>}" />
+                                    <ComboBox id="idPoCompanyCode" items="{ path: 'CompanyCodeModel>/' }">
+                                        <core:Item id="_IDGenItem11" key="{CompanyCodeModel>CompanyCode}" text="{CompanyCodeModel>CompanyCode}" />
                                     </ComboBox>
                                 </fb:control>
                             </fb:FilterGroupItem>
@@ -139,6 +139,9 @@
                     <Column id="_IDGenColumn3" minScreenWidth="Tablet" demandPopin="true" hAlign="Center" visible="false">
                         <Text id="_IDGenText12" text="Plant" />
                     </Column>
+                    <Column id="_IDGenColumnn3" minScreenWidth="Tablet" demandPopin="true" hAlign="Center" visible="false">
+                        <Text id="_IDGenTextt12" text="Purchase Order Text" />
+                    </Column>
 
                 </columns>
                 <items>
@@ -159,6 +162,7 @@
                             <Text id="_IDGenText9" text="{path:'TableModelPO>PurchaseOrderDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
                             <Text id="_IDGenText10" text="{TableModelPO>SupplierRespSalesPersonName}" />
                             <Text id="_IDGenText13" text="{TableModelPO>Plant}" />
+                            <Text id="_IDGenTextt" text="{TableModelPO>purchaseOrderText}" />
                         </cells>
                     </ColumnListItem>
                 </items>
