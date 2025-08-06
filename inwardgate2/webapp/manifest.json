@@ -1,0 +1,162 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "com.scp.fiori.inwardgateentry",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:basic",
+      "version": "1.16.5",
+      "toolsId": "9b950b9b-e218-45e9-821e-14c5889ad5a2"
+    },
+    "dataSources": {
+      "ZB_MM_IGEF4HELP_VAN": {
+        "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZB_MM_IGEF4HELP_VAN',Version='0001')/$value/",
+        "type": "ODataAnnotation",
+        "settings": {
+          "localUri": "localService/mainService/ZB_MM_IGEF4HELP_VAN.xml"
+        }
+      },
+      "mainService": {
+        "uri": "/sap/opu/odata/sap/ZB_MM_IGEF4HELP/",
+        "type": "OData",
+        "settings": {
+          "annotations": [
+            "ZB_MM_IGEF4HELP_VAN"
+          ],
+          "localUri": "localService/mainService/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      },
+      "ZSB_INWARDGATEENTRY_VAN": {
+        "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZSB_INWARDGATEENTRY_VAN',Version='0001')/$value/",
+        "type": "ODataAnnotation",
+        "settings": {
+          "localUri": "localService/ZSB_INWARDGATEENTRY/ZSB_INWARDGATEENTRY_VAN.xml"
+        }
+      },
+      "ZSB_INWARDGATEENTRY": {
+        "uri": "/sap/opu/odata/sap/ZSB_INWARDGATEENTRY/",
+        "type": "OData",
+        "settings": {
+          "annotations": [
+            "ZSB_INWARDGATEENTRY_VAN"
+          ],
+          "localUri": "localService/ZSB_INWARDGATEENTRY/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "zsemobj_gateentry-manage": {
+          "semanticObject": "zsemobj_gateentry",
+          "action": "manage",
+          "title": "{{zsemobj_gateentry-manage.flpTitle}}",
+          "subTitle": "{{zsemobj_gateentry-manage.flpSubtitle}}",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.133.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {}
+      }
+    },
+    "config": {
+      "fullWidth": true
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "com.scp.fiori.inwardgateentry.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {}
+      },
+      "ZSB_INWARDGATEENTRY": {
+        "dataSource": "ZSB_INWARDGATEENTRY",
+        "preload": true,
+        "settings": {}
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "transition": "slide",
+        "type": "View",
+        "viewType": "XML",
+        "path": "com.scp.fiori.inwardgateentry.view",
+        "async": true,
+        "viewPath": "com.scp.fiori.inwardgateentry.view"
+      },
+      "routes": [
+        {
+          "name": "RouteView1",
+          "pattern": ":?query:",
+          "target": [
+            "TargetView1"
+          ]
+        }
+      ],
+      "targets": {
+        "TargetView1": {
+          "id": "View1",
+          "name": "View1"
+        }
+      }
+    },
+    "rootView": {
+      "viewName": "com.scp.fiori.inwardgateentry.view.App",
+      "type": "XML",
+      "id": "App"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://sap.github.io/ui5-tooling/schema/ui5.yaml.json
+
+specVersion: "3.1"
+metadata:
+  name: com.scp.fiori.inwardgateentry
+type: application
+server:
+  customMiddleware:
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        ignoreCertError: false
+        ui5:
+          path:
+            - /resources
+            - /test-resources
+          url: https://ui5.sap.com
+        backend:
+          - url: https://my420245-api.s4hana.cloud.sap
+            authenticationType: SAMLAssertion
+            path: /sap
+          - url: https://my420245-api.s4hana.cloud.sap
+            authenticationType: SAMLAssertion
+            path: /sap
+    - name: fiori-tools-appreload
+      afterMiddleware: compression
+      configuration:
+        port: 35729
+        path: webapp
+        delay: 300
+    - name: fiori-tools-preview
+      afterMiddleware: fiori-tools-appreload
+      configuration:
+        component: com.scp.fiori.inwardgateentry
+        ui5Theme: sap_horizon
+    - name: sap-fe-mockserver
+      beforeMiddleware: csp
+      configuration:
+        mountPath: /
+        services:
+          - urlPath: /sap/opu/odata/sap/ZB_MM_IGEF4HELP
+            metadataPath: ./webapp/localService/mainService/metadata.xml
+            mockdataPath: ./webapp/localService/mainService/data
+            generateMockData: true
+          - urlPath: /sap/opu/odata/sap/ZSB_INWARDGATEENTRY
+            metadataPath: ./webapp/localService/ZSB_INWARDGATEENTRY/metadata.xml
+            mockdataPath: ./webapp/localService/ZSB_INWARDGATEENTRY/data
+            generateMockData: true
+        annotations:
+          - localPath: ./webapp/localService/mainService/ZB_MM_IGEF4HELP_VAN.xml
+            urlPath: /sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZB_MM_IGEF4HELP_VAN',Version='0001')/$value/
+          - localPath: ./webapp/localService/ZSB_INWARDGATEENTRY/ZSB_INWARDGATEENTRY_VAN.xml
+            urlPath: /sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZSB_INWARDGATEENTRY_VAN',Version='0001')/$value/

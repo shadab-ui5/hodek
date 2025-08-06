@@ -1,0 +1,32 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <TableSelectDialog
+        id="plantSelectDialog"
+        title="Select Plant"
+        growing="true"
+        growingThreshold="12"
+        multiSelect="true"
+        items="{PlantModelVh>/Plants}"
+        confirm=".onPlantConfirm"
+        cancel=".onPlantCancel"
+        search=".onPlantSearch"
+        updateStarted=".onPlantUpdateStarted" class="sapUiResponsiveContentPadding">
+        
+        <columns>
+            <Column><Text text="Plant"/></Column>
+            <Column><Text text="Plant Name"/></Column>
+            <Column><Text text="Valuation Area"/></Column>
+            <Column><Text text="Customer No Plant"/></Column>
+        </columns>
+
+        <items>
+            <ColumnListItem>
+                <cells>
+                    <Text text="{PlantModelVh>Plant}" />
+                    <Text text="{PlantModelVh>PlantName}" />
+                    <Text text="{PlantModelVh>ValuationArea}" />
+                    <Text text="{PlantModelVh>PlantCustomer}" />
+                </cells>
+            </ColumnListItem>
+        </items>
+    </TableSelectDialog> 
+</core:FragmentDefinition>

@@ -1,0 +1,26 @@
+specVersion: "3.1"
+metadata:
+  name: com.scp.fiori.inwardgateentry
+type: application
+builder:
+  customTasks:
+    - name: ui5-tooling-modules-task
+      afterTask: replaceVersion
+    - name: deploy-to-abap
+      afterTask: generateCachebusterInfo
+      configuration:
+        target:
+          destination: 0M6F5TC_SAML_ASSERTION_DEV080
+          url: https://my420245.s4hana.cloud.sap
+          authenticationType: reentranceTicket
+        app:
+          name: ZIN_GATE_ENTRY2
+          description: Inward Gate Entry Application
+          package: ZMM_DEV
+          transport: MRFK901436
+        exclude:
+          - /test/
+  resources:
+    excludes:
+      - /test/**
+      - /localService/**

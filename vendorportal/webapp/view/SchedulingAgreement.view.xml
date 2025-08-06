@@ -1,0 +1,156 @@
+<mvc:View controllerName="hodek.vendorportal.controller.SchedulingAgreement"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:svm="sap.ui.comp.smartvariants">
+    <f:DynamicPage id="SchedulingAgreementPage" headerExpanded="{/headerExpanded}">
+        <f:title>
+            <f:DynamicPageTitle id="_IDGenDynamicPageTitle">
+                <f:heading>
+                    <svm:SmartVariantManagement id="svm" showExecuteOnSelection="true" />
+                </f:heading>
+                <f:expandedContent>
+                    <Label id="expandedLabel" text="Expanded" />
+                </f:expandedContent>
+                <f:snappedContent>
+                    <Label id="snappedLabel" text="No Expanded" />
+                </f:snappedContent>
+            </f:DynamicPageTitle>
+        </f:title>
+        <f:header>
+            <f:DynamicPageHeader id="_IDGenDynamicPageHeader">
+                <f:content>
+                    <fb:FilterBar id="filterbar" useToolbar="false" search=".onSearch" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
+                        <fb:filterGroupItems>
+                            <fb:FilterGroupItem id="_IDGenFilterGroupItem1" name="Name" label="Name" groupName="Group1" visibleInFilterBar="true">
+                                <fb:control>
+                                    <MultiComboBox id="_IDGenMultiComboBox" name="Name" selectionChange=".onSelectionChange" items="{
+												path: '/ProductNames',
+												templateShareable: true
+											}">
+                                        <core:Item id="_IDGenItem" key="{key}" text="{name}"/>
+                                    </MultiComboBox>
+                                </fb:control>
+                            </fb:FilterGroupItem>
+                            <fb:FilterGroupItem id="_IDGenFilterGroupItem2" name="Category" label="Category" groupName="Group1" visibleInFilterBar="true">
+                                <fb:control>
+                                    <MultiComboBox id="_IDGenMultiComboBox1" name="Category" selectionChange=".onSelectionChange" items="{
+												path: '/ProductCategories',
+												templateShareable: true
+											}">
+                                        <core:Item id="_IDGenItem1" key="{key}" text="{name}"/>
+                                    </MultiComboBox>
+                                </fb:control>
+                            </fb:FilterGroupItem>
+                            <fb:FilterGroupItem id="_IDGenFilterGroupItem3" name="SupplierName" label="SupplierName" groupName="Group1" visibleInFilterBar="true">
+                                <fb:control>
+                                    <MultiComboBox id="_IDGenMultiComboBox2" name="SupplierName" selectionChange=".onSelectionChange" items="{
+												path: '/ProductSuppliers',
+												templateShareable: true
+											}">
+                                        <core:Item id="_IDGenItem2" key="{key}" text="{name}"/>
+                                    </MultiComboBox>
+                                </fb:control>
+                            </fb:FilterGroupItem>
+                            <fb:FilterGroupItem id="_IDGenFilterGroupItem" name="SupplierName1" label="SupplierName1" groupName="Group1" visibleInFilterBar="true">
+                                <fb:control>
+                                    <MultiComboBox id="_IDGenMultiComboBox3" name="SupplierName" selectionChange=".onSelectionChange" items="{
+												path: '/ProductSuppliers',
+												templateShareable: true
+											}">
+                                        <core:Item id="_IDGenItem4" key="{key}" text="{name}"/>
+                                    </MultiComboBox>
+                                </fb:control>
+                            </fb:FilterGroupItem>
+                            <fb:FilterGroupItem id="_IDGenFilterGroupItem4" name="SupplierName2" label="SupplierName2" groupName="Group1" visibleInFilterBar="true">
+                                <fb:control>
+                                    <MultiComboBox id="_IDGenMultiComboBox4" name="SupplierName" selectionChange=".onSelectionChange" items="{
+												path: '/ProductSuppliers',
+												templateShareable: true
+											}">
+                                        <core:Item id="_IDGenItem5" key="{key}" text="{name}"/>
+                                    </MultiComboBox>
+                                </fb:control>
+                            </fb:FilterGroupItem>
+                            <fb:FilterGroupItem id="_IDGenFilterGroupItem5" name="SupplierName3" label="SupplierName3" groupName="Group1" visibleInFilterBar="true">
+                                <fb:control>
+                                    <MultiComboBox id="_IDGenMultiComboBox5" name="SupplierName" selectionChange=".onSelectionChange" items="{
+												path: '/ProductSuppliers',
+												templateShareable: true
+											}">
+                                        <core:Item id="_IDGenItem6" key="{key}" text="{name}"/>
+                                    </MultiComboBox>
+                                </fb:control>
+                            </fb:FilterGroupItem>
+                            <fb:FilterGroupItem id="_IDGenFilterGroupItem6" name="SupplierName4" label="SupplierName4" groupName="Group1" visibleInFilterBar="true">
+                                <fb:control>
+                                    <MultiComboBox id="_IDGenMultiComboBox6" name="SupplierName" selectionChange=".onSelectionChange" items="{
+												path: '/ProductSuppliers',
+												templateShareable: true
+											}">
+                                        <core:Item id="_IDGenItem7" key="{key}" text="{name}"/>
+                                    </MultiComboBox>
+                                </fb:control>
+                            </fb:FilterGroupItem>
+                        </fb:filterGroupItems>
+                    </fb:FilterBar>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        <f:content>
+            <Table id="idProductsTable" items="{/ProductCollection}">
+                <headerToolbar>
+                    <OverflowToolbar id="_IDGenOverflowToolbar1">
+                        <Title id="_IDGenTitle3" text="Scheduling Agreement" level="H2"/>
+                        <ToolbarSpacer id="_IDGenToolbarSpacer"/>
+                        <Button id="_IDGenButton" tooltip="Sort" icon="sap-icon://sort" press="handleSortButtonPressed"/>
+                        <Button id="_IDGenButton1" tooltip="Filter" icon="sap-icon://filter" press="handleFilterButtonPressed"/>
+                        <Button id="_IDGenButton2" tooltip="Group" icon="sap-icon://group-2" press="handleGroupButtonPressed"/>
+                        <ToggleButton id="_IDGenToggleButton" icon="sap-icon://menu" tooltip="Enable Custom Context Menu" press="onToggleContextMenu" />
+                    </OverflowToolbar>
+                </headerToolbar>
+                <infoToolbar>
+                    <OverflowToolbar id="vsdFilterBar" visible="false">
+                        <Text id="vsdFilterLabel" />
+                    </OverflowToolbar>
+                </infoToolbar>
+                <columns>
+                    <Column id="purOrder" headerMenu="columnHeaderMenu">
+                        <Text id="_IDGenText" text="Purchase Order" />
+                    </Column>
+                    <Column id="_IDGenColumn" minScreenWidth="Tablet" demandPopin="true">
+                        <Text id="_IDGenText2" text="Supplier" />
+                    </Column>
+                    <Column id="_IDGenColumn1" minScreenWidth="Tablet" demandPopin="true" hAlign="End">
+                        <Text id="_IDGenText3" text="Supplier Date" />
+                    </Column>
+                    <Column id="_IDGenColumn2" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                        <Text id="_IDGenText4" text="Sales Person" />
+                    </Column>
+                    
+                </columns>
+                <items>
+                    <ColumnListItem id="_IDGenColumnListItem" vAlign="Middle" type="Navigation">
+                        <cells>
+                            <ObjectIdentifier id="_IDGenObjectIdentifier" title="{Name}" text="{ProductId}" />
+                            <Text id="_IDGenText6" text="{SupplierName}" />
+                            <Text id="_IDGenText7" text="{Width} x {Depth} x {Height} {DimUnit}" />
+                            <ObjectNumber id="_IDGenObjectNumber" number="{WeightMeasure}" unit="{WeightUnit}" state="{
+								path: 'WeightMeasure',
+								formatter: '.formatter.weightState'
+							}" />
+                            <ObjectNumber id="_IDGenObjectNumber1" number="{
+								parts:[{path:'Price'},{path:'CurrencyCode'}],
+								type: 'sap.ui.model.type.Currency',
+								formatOptions: {showMeasure: false}
+							}" unit="{CurrencyCode}" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </f:content>
+    </f:DynamicPage>
+
+</mvc:View>

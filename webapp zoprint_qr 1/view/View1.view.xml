@@ -1,0 +1,12 @@
+<mvc:View controllerName="zoprintqr.zoprintqr.controller.View1"
+    xmlns:mvc="sap.ui.core.mvc" displayBlock="true"
+    xmlns="sap.m">
+    <Page id="page" title="{i18n>title}">
+        <content >
+            <ToolbarSeparator class="sapUiLargeMarginTop"/>
+            <HBox justifyContent="Center" alignItems="Center" width="100%" class="sapUiLargeMarginTop">
+                <BusyIndicator text="Please wait page is loading..." size="3em" />
+            </HBox>
+        </content>
+    </Page>
+</mvc:View>

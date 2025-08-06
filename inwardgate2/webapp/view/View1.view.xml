@@ -1,0 +1,346 @@
+<mvc:View xmlns:cards="sap.f.cards" xmlns:layout="sap.ui.layout" controllerName="com.scp.fiori.inwardgateentry.controller.View1"
+    xmlns:core="sap.ui.core"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:table="sap.ui.table">
+    <Page id="page" title="{i18n>title}" showFooter="true" titleAlignment="Auto">
+        <Panel class="sapUiContentPadding">
+            <HBox>
+                <VBox width="25%">
+                    <Label text="Plant" required="true"/>
+                    <!-- <ComboBox id="idDropdownPlant" selectedKey="" width="75%" selectionChange="onSelectPlant">
+                        <items>
+                            <core:Item key="" text=""/>
+                            <core:Item key="1100" text="MACPL Unit 3"/>
+                            <core:Item key="2100" text="MACPL Unit 4"/>
+                            <core:Item key="2200" text="MACPL Unit 5"/>
+                        </items>
+                    </ComboBox> -->
+                    <ComboBox id="idDropdownPlant" selectedKey="" width="75%" selectionChange="onSelectPlant" items="{
+					    path: '/',
+                        sorter: { path: 'Plant' }
+                    }">
+                        <core:Item key="{Plant}" text="{Plant} - {PlantName}"/>
+                    </ComboBox>
+                </VBox>      
+                <VBox width="25%">
+                    <Label text="Inward Type" required="true"/>
+                    <ComboBox id="idDropdownInwardType" selectedKey="" width="75%" selectionChange="onSelectInwardType">
+                        <core:Item key="ReceiptAgainstPO" text="Receipt Against PO"/>
+                        <core:Item key="ReceiptAsItIs" text="Receipt As It Is"/>
+                        <!-- <core:Item key="zchallan" text="zchallan"/> -->
+                    </ComboBox>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Date"/>
+                    <Input id="idRAPO_Date" enabled="false" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Time"/>
+                    <Input id="idRAPO_Time" enabled="false" width="75%"/>
+                </VBox>
+            </HBox>
+        </Panel>
+
+        <Panel id="idPanelRAPO" class="sapUiContentPadding" headerText="General Data" visible="false">
+            <HBox>
+                <VBox width="25%">
+                    <Label text="Purchase Order" required="true"/>
+                    <Input id="idRAPO_PO_Order" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="POValueHelp" maxLength="10" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Doc./Inv. No" required="true"/>
+                    <Input id="idDocInvNo" value="" change="onChangeDocInvNo" maxLength="16" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Invoice/DC Date" required="true"/>
+                    <DatePicker id="idRAPO_InvDate" width="75%" placeholder="Select Date" displayFormat="MMM dd, yyyy" enabled="true" class="sapUiSmallMarginBottom"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Vehical Number" required="true"/>
+                    <Input id="idRAPO_VehicalNo" maxLength="10" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Transporter" required="true"/>
+                    <Input id="idRAPO_Trasporter" showValueHelp="true" valueHelpRequest="transporterValueHelp" maxLength="50" width="75%"/>
+                </VBox>  
+            </HBox>
+
+            <HBox class="sapUiTinyMarginTop">
+                <VBox width="25%">
+                    <Label text="Amount" required="true"/>
+                    <Input id="idRAPO_Amount" change="onChangeRAPOAmount" type="Number" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Eway Bill Number" required="true"/>
+                    <Input id="idRAPO_EwayNo" maxLength="50" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="LR Date"/>
+                    <DatePicker id="idRAPO_LR_Date" width="75%" placeholder="Select Date" change="handleChange_RAPO_LRDate"
+					displayFormat="MMM dd, yyyy" enabled="true" class="sapUiSmallMarginBottom"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="LR Number"/>
+                    <Input id="idRAPO_LR_No" maxLength="25" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Fiscal Year"/>
+                    <Input id="idFiscalYear" value="" enabled="false" width="75%"/>
+                </VBox>   
+            </HBox>
+
+            <VBox class="sapUiMediumMarginTop">
+                <Toolbar>
+                    <Title text="Item Data"/>
+                </Toolbar>
+                <Table id="idTable_RAPO" items="{path: '/'}">
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <ToolbarSpacer/>
+                            <Button icon="sap-icon://add" text="Add" press="onAddReceiptAsPOTableItem"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    <columns>
+                        <Column>
+                            <Text text="Material" />
+                        </Column>
+                        <Column>
+                            <Text text="Material Description" />
+                        </Column>
+                        <Column>
+                            <Text text="Item No" />
+                        </Column>
+                        <Column>
+                            <Text text="Quantity" />
+                        </Column>
+                        <Column>
+                            <Text text="Unit" />
+                        </Column>
+                        <Column>
+                            <Text text="Action" />
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Input value="{Material}" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="material_RAPOValueHelp"/>                                
+                                <!-- <Text text="{Material}" /> -->
+                                <Text text="{PurchaseOrderItemText}" />
+                                <Text text="{PurchaseOrderItem}"/>
+                                <!-- <Input value="{AvailableQuantity}" liveChange="onChangeRAPOItemQuantity" type="Tel" /> -->
+                                <Input id="idInpRAPOItemQuantity" value="{EnteredQuantity}" change="onChangeRAPOItemQuantity" type="Number" enabled="{isMaterialSelected}" />
+                                <Text text="{Unit}" />
+                                <Button icon="sap-icon://delete" press="onDeleteReceiptAsPoItem" visible="{isDeletable}"></Button>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
+
+        </Panel>
+
+        <Panel id="idPanelRAII" class="sapUiContentPadding" headerText="General Data" visible="false">
+            <HBox>
+                <!-- <VBox width="25%">
+                    <Label text="Date"/>
+                    <Input id="idRAII_Date" enabled="false" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Time"/>
+                    <Input id="idRAII_Time" enabled="false" width="75%"/>
+                </VBox> -->
+
+                <VBox width="25%">
+                    <Label text="Vendor" required="true"/>
+                    <Input id="idRAII_Vendor" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="vendorValueHelp" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Challan Number" required="true"/>
+                    <Input id="idRAII_Challan" value="" liveChange="onChangeAmount" maxLength="10" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Doc./Inv. No" required="true"/>
+                    <Input id="idRAII_DocInvNo" value="" change="onChangeRAII_DocInvNo" maxLength="16" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Invoice/DC Date" required="true"/>
+                    <DatePicker id="idRAII_InvDate" width="75%" placeholder="Select Date" change="handleChange_RAPO_InvDate"
+					displayFormat="MMM dd, yyyy" enabled="true" class="sapUiSmallMarginBottom"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Amount" required="true"/>
+                    <Input id="idRAII_Amount" liveChange="onChangeAmount" type="Number" width="75%"/>
+                </VBox>
+            </HBox>
+
+            <HBox class="sapUiTinyMarginTop">
+                <VBox width="25%">
+                    <Label text="Vehical Number" required="true"/>
+                    <Input id="idRAII_VehicalNo" maxLength="10" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Transporter" required="true"/>
+                    <Input id="idRAII_Trasporter" showValueHelp="true" valueHelpRequest="transporterValueHelp" maxLength="50" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Eway Number" required="true"/>
+                    <Input id="idRAII_EwayNo" maxLength="50" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="LR Date"/>
+                    <DatePicker id="idRAII_LR_Date" width="75%" placeholder="Select Date" change="handleChange_RAPO_LRDate"
+					displayFormat="MMM dd, yyyy" enabled="true" class="sapUiSmallMarginBottom"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="LR Number"/>
+                    <Input id="idRAII_LR_No" maxLength="25" width="75%"/>
+                </VBox>
+            </HBox>
+
+            <HBox class="sapUiTinyMarginTop">
+                <VBox width="25%">
+                    <Label text="Fiscal Year"/>
+                    <Input id="idRAII_FiscalYear" value="" enabled="false" width="75%"/>
+                </VBox> 
+            </HBox>
+
+            <VBox>
+                <Toolbar>
+                    <Title text="Item Data"/>
+                </Toolbar>
+                <Table id="idTable_RAII" items="{path: '/'}">
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <!-- <Title text="My Table"/> -->
+                            <ToolbarSpacer/>
+                            <Button icon="sap-icon://add" text="Add" press="onAddReceiptAsItIsItem"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    <columns>
+                        <Column>
+                            <Text text="Item No" />
+                        </Column>
+                        <Column>
+                            <Text text="Material" />
+                        </Column>
+                        <Column>
+                            <Text text="Material Description" />
+                        </Column>
+                        <Column>
+                            <Text text="Quantity" />
+                        </Column>
+                        <Column>
+                            <Text text="Unit" />
+                        </Column>
+                        <Column>
+                            <Text text="Action" />
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{Itemno}"/>
+                                <Input value="{Product}" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="materialValueHelp"/>
+                                <Input value="{ProductName}" enabled="false"/>
+                                <Input value="{AvailableQuantity}" liveChange="onChangeAmount" />
+                                <Text text="{Unit}" />
+                                <Button icon="sap-icon://delete" press="onDeleteReceiptAsItIsItem" visible="{= ${Itemno} !== '10' }"></Button>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
+
+        </Panel>
+
+        <Panel id="idPanelChallan" class="sapUiContentPadding" headerText="General Data" visible="false">
+            <HBox>
+                <VBox width="25%">
+                    <Label text="Date"/>
+                    <Input id="idChallan_Date" enabled="false" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Time"/>
+                    <Input id="idChallan_Time" enabled="false" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Invoice/DC Date"/>
+                    <DatePicker id="idChallan_InvDate" width="75%" placeholder="Select Date" change="handleChange_RAPO_InvDate"
+					class="sapUiSmallMarginBottom"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Challan No"/>
+                    <Input id="idChallanNumber" width="75%"/>
+                </VBox>
+                <VBox width="25%">
+                    <Label text="Vendor" required="true"/>
+                    <Input id="idChallan_Vendor" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="VendorValueHelp" width="75%"/>
+                </VBox>
+            </HBox>
+
+            <FlexBox alignContent="Center" alignItems="Center" justifyContent="End">
+                <Button text="Add" press="onAddChallanItem" icon="sap-icon://add" class="sapUiLargeMarginBegin"></Button>
+            </FlexBox >
+
+            <VBox>
+                <Toolbar>
+                    <Title text="Item Data"/>
+                </Toolbar>
+                <Table id="idTable_Challan" items="{path: '/'}">
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <!-- <Title text="My Table"/> -->
+                            <ToolbarSpacer/>
+                            <Button icon="sap-icon://add" text="Add" press="onAddReceiptAsItIsItem"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    <columns>
+                        <Column>
+                            <Text text="Item No" />
+                        </Column>
+                        <Column>
+                            <Text text="Material" />
+                        </Column>
+                        <Column>
+                            <Text text="Material Description" />
+                        </Column>
+                        <Column>
+                            <Text text="Quantity" />
+                        </Column>
+                        <Column>
+                            <Text text="Action" />
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{Itemno}"/>
+                                <Input value="{Product}" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="materialValueHelp"/>
+                                <Input value="{ProductName}" enabled="false"/>
+                                <Input value="{AvailableQuantity}" liveChange="onChangeAmount" />
+                                <Button icon="sap-icon://delete" press="onDeleteChallanItem" visible="{= ${Itemno} !== '10' }"></Button>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
+
+        </Panel>
+
+        <VBox id="idVBox_QRCode" visible="false">
+            <!-- Canvas element to render the QR code -->
+            <!-- <canvas id="qrCanvas" width="200" height="200" style="display:none;"></canvas> -->
+        </VBox>
+
+        <footer>
+			<Toolbar>
+				<ToolbarSpacer/>
+                <Button text="Reprint Gate Entry" press="onRePrintGateEntryQR"/>
+                <Button text="Cancel Gate Entry" press="onCancelGateEntry"/>
+				<Button type="Emphasized" text="Save" press="onSave" class="sapUiSmallMarginEnd"/>
+                <!-- <Button text="Download QR" press="downloadQR"/> -->
+			</Toolbar>
+		</footer>
+    </Page>
+</mvc:View>
