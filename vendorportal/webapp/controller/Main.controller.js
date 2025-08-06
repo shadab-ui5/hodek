@@ -8,6 +8,7 @@ sap.ui.define([
 
         onInit: function () {
             let that = this;
+            
             if (sap.ushell && sap.ushell.Container) {
                 sap.ushell.Container.getServiceAsync("UserInfo").then(function (UserInfo) {
                     let loginUser = UserInfo.getId();

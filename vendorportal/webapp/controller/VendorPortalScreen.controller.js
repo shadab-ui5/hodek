@@ -9,9 +9,7 @@ sap.ui.define([
         onInit: function () {
             const oVendorModel = new sap.ui.model.json.JSONModel([]);
             this.getView().setModel(oVendorModel, "VendorPortalModel");
-
             const oODataModel = this.getOwnerComponent().getModel("vendorModel");
-
             const oFilterModel = new sap.ui.model.json.JSONModel();
             const oTableModel = new sap.ui.model.json.JSONModel();
             const oRouteData = new sap.ui.model.json.JSONModel();
@@ -27,8 +25,6 @@ sap.ui.define([
             this.getView().setModel(oFilterModel, "FilterModel");
 
             const oBusyDialog = new sap.m.BusyDialog({ text: "Loading data..." });
-            // oBusyDialog.open();
-            this._loadSupplierVHData(); // fetch and optionally prefill
             let that = this;
 
             // Models.loadFilterData(oODataModel, oFilterModel)
@@ -91,14 +87,7 @@ sap.ui.define([
             this._oSupplierDialog.setModel(oView.getModel("SupplierVHModel"));
             this._oSupplierDialog.open();
         },
-        _loadSupplierVHData: function () {
-            let oView = this.getView();
-            let sUser = sap.ushell && sap.ushell.Container
-                ? sap.ushell.Container.getUser().getId()
-                : "CB9980000018"; // fallback for local/dev
-
-            Models.readSupplierVhData(oView, sUser, this);
-        },
+        
         onSupplierSearch: function (oEvent) {
             let sValue = oEvent.getParameter("value");
             let aFilters = [

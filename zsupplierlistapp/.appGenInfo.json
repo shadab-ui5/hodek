@@ -1,0 +1,29 @@
+{
+  "generationParameters": {
+    "generationDate": "Wed Aug 06 2025 11:19:26 GMT+0000 (Coordinated Universal Time)",
+    "generatorPlatform": "SAP Business Application Studio",
+    "serviceType": "SAP System (ABAP On-Premise)",
+    "metadataFilename": "",
+    "serviceUrl": "https://my426294.s4hana.cloud.sap/sap/opu/odata/sap/ZMM_VEND_PORT_SER_BIND",
+    "appName": "zsupplierlistapp",
+    "appTitle": "Supplier List by User",
+    "appDescription": "Supplier List by User",
+    "appNamespace": "",
+    "ui5Theme": "sap_horizon",
+    "ui5Version": "1.130.11",
+    "enableCodeAssist": false,
+    "enableEslint": false,
+    "enableTypeScript": false,
+    "showMockDataInfo": true,
+    "generatorVersion": "1.18.4",
+    "template": "List Report Page V2",
+    "generatorName": "SAP Fiori Application Generator",
+    "entityRelatedConfig": [
+      {
+        "type": "Main Entity",
+        "value": "supplierListByUser"
+      }
+    ],
+    "launchText": "To launch the generated application, run the following from the generated application root folder:\n\n```\n    npm start\n```"
+  }
+}

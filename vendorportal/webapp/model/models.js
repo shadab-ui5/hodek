@@ -24,6 +24,9 @@ sap.ui.define([
                     ],
                     success: function (oData) {
                         console.log("Fetched supplier list:", oData.results);
+                        let oJSONModel = new sap.ui.model.json.JSONModel(oData.results);
+                        
+                        that.getOwnerComponent().setModel(oData.results, "SupplierVHModel");
                     },
                     error: function (oError) {
                         console.error("Error fetching supplier list", oError);

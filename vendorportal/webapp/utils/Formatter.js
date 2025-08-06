@@ -10,6 +10,10 @@ sap.ui.define([], function () {
             const yyyy = date.getFullYear();
 
             return `${dd}.${mm}.${yyyy}`;
+        },
+        formatPurchaseOrderText: function (sPo, sPoText) {
+            return sPo + " [ " + (sPoText ? sPoText : "NA") + " ]";
         }
+        
     };
 });
