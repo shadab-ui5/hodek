@@ -52,7 +52,7 @@
                             <VBox id="_IDGenVBox19" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel21" class="labelDesin" design="Bold" text="Sales Person" />
                                 <!-- <Text id="idPoHeadSalesPerson" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/SupplierRespSalesPersonName}"/> -->
-                                <Text id="_IDGenText23" class="textDesin" text="{RoutePoData>/PoHeader/SupplierRespSalesPersonName}"/>
+                                <Text id="_IDGenText23" class="textDesin" text="{=${RoutePoData>/PoHeader/SupplierRespSalesPersonName}?${RoutePoData>/PoHeader/SupplierRespSalesPersonName}:'NA'}" emptyIndicatorMode="On"/>
                             </VBox>
 
                         </HBox>

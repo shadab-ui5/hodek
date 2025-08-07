@@ -1,9 +1,10 @@
 sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/Device",
-    "hodek/vendorportal/utils/Formatter"
+    "hodek/vendorportal/utils/Formatter",
+    "sap/ui/core/format/DateFormat"
 ],
-    function (JSONModel, Device, Formatter) {
+    function (JSONModel, Device, Formatter,DateFormat) {
         "use strict";
 
         return {
@@ -71,7 +72,9 @@ sap.ui.define([
 
             searchPoHeader: function (_this, oView, oModel, oTableModel) {
                 const aFilters = [];
-
+                let oDateFormat = DateFormat.getInstance({
+                    pattern: "yyyy-MM-dd'T'00:00:00"
+                });
                 // Supplier (MultiComboBox)
                 const aSelectedSuppliers = oView.byId("idPoSupplier").getTokens().map(function (oToken) {
                     return oToken.getKey();
@@ -129,8 +132,10 @@ sap.ui.define([
                 const oEndDate = oDRS.getSecondDateValue();
 
                 if (oStartDate && oEndDate) {
-                    const fromDate = Formatter.formatDateToYyyyMmDd(oStartDate); // "2025-08-07"
-                    const toDate = Formatter.formatDateToYyyyMmDd(oEndDate);     // "2025-08-08"
+                    // const fromDate = Formatter.formatDateToYyyyMmDd(oStartDate); // "2025-08-07"
+                    // const toDate = Formatter.formatDateToYyyyMmDd(oEndDate);     // "2025-08-08"
+                    const fromDate = oDateFormat.format(new Date(oStartDate)); // "2025-08-07"
+                    const toDate = oDateFormat.format(new Date(oEndDate));     // "2025-08-08"
 
                     aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.GE, fromDate));
                     aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.LE, toDate));
