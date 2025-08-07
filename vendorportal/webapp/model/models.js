@@ -4,7 +4,7 @@ sap.ui.define([
     "hodek/vendorportal/utils/Formatter",
     "sap/ui/core/format/DateFormat"
 ],
-    function (JSONModel, Device, Formatter,DateFormat) {
+    function (JSONModel, Device, Formatter, DateFormat) {
         "use strict";
 
         return {
@@ -27,12 +27,8 @@ sap.ui.define([
                         ],
                         success: function (oData) {
                             console.log("Fetched supplier list:", oData.results);
-                            const uniqueGroups = [...new Map(oData.results.map(obj => [obj.PurchasingGroup, obj])).values()];
-                            const oFilterModel = new sap.ui.model.json.JSONModel(uniqueGroups);
-                            _this.getView().setModel(oFilterModel, "PgVHModel");
-                            let oJSONModel = new sap.ui.model.json.JSONModel(oData.results);
-                            _this.getOwnerComponent().setModel(oJSONModel, "SupplierVHModel");
-                            resolve();
+                            
+                            resolve(oData);
                         },
                         error: function (oError) {
                             console.error("Error fetching supplier list", oError);
@@ -172,7 +168,7 @@ sap.ui.define([
                     let oModel = _this.getOwnerComponent().getModel("vendorModel");
                     let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
                     const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
-
+                    console.log("Unique Suppliers:", uniqueSupplier)
                     // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
                     let aFilters = [];
                     if (sQuery) {

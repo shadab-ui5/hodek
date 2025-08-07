@@ -2,6 +2,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns:fb="sap.ui.comp.filterbar"
     xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:svm="sap.ui.comp.smartvariants">
@@ -10,7 +11,7 @@
             <f:title>
                 <f:DynamicPageTitle id="_IDGenDynamicPageTitle2">
                     <!-- <f:navigationActions> -->
-                        <!-- <Button id="_IDGenButton10" text="Next" type="Success" icon="sap-icon://open-command-field" press="onNavNext"/> -->
+                    <!-- <Button id="_IDGenButton10" text="Next" type="Success" icon="sap-icon://open-command-field" press="onNavNext"/> -->
                     <!-- </f:navigationActions> -->
                     <f:heading>
                         <Title id="_IDGenTitle1" text="{RoutePoData>/PoHeader/PurchaseOrder}" level="H1"/>
@@ -85,15 +86,22 @@
                             </VBox>
 
                         </HBox>
+                        <HBox id="_IDGenHBox7" class="sapUiTinyMarginTop">
+                            <HBox id="_IDGenVBoxFile" alignItems="Center">
+                                <Label id="_IDGenLabel" text="Upload Files :" required="true"/>
+                                <u:FileUploader id="fileUploader" name="myFileUpload" uploadUrl="upload/" tooltip="Upload your file to the local server" uploadComplete="handleUploadComplete"/>
+                                <Button id="_IDGenButton10" text="Upload File" press="handleUploadPress"/>
+                            </HBox>
+                        </HBox>
                     </f:content>
                 </f:DynamicPageHeader>
             </f:header>
             <f:content>
                 <VBox id="_IDGenVBox14" class="sapUiMediumMarginTop">
-                    <Table id="idTable_RAPO" alternateRowColors="true" items="{path: 'AsnItemsModel>/Results'}" multiSelectMode="SelectAll" mode="MultiSelect" sticky="ColumnHeaders,HeaderToolbar">
+                    <Table id="idTable_RAPO" alternateRowColors="true" items="{path: 'AsnItemsModel>/Results'}" sticky="ColumnHeaders,HeaderToolbar">
                         <headerToolbar>
                             <OverflowToolbar id="_IDGenOverflowToolbar">
-                             <Title id="_IDGenTitle6" text="Items" level="H2"/>
+                                <Title id="_IDGenTitle6" text="Items" level="H2"/>
                                 <ToolbarSpacer id="_IDGenToolbarSpacer"/>
                                 <!-- <Button id="_IDGenButton" icon="sap-icon://add" text="Add" press="onAddReceiptAsPOTableItem"/> -->
                             </OverflowToolbar>
@@ -114,7 +122,7 @@
                             <Column id="_IDGenColumn5">
                                 <Text id="_IDGenText5" text="UOM" />
                             </Column>
-                            <Column id="_IDGenColumn7" >
+                            <Column id="_IDGenColumn7">
                                 <Text id="_IDGenText11" text="Quantity" />
                             </Column>
                         </columns>
@@ -133,6 +141,9 @@
                             </ColumnListItem>
                         </items>
                     </Table>
+                    <VBox id="idVBox_QRCode" visible="false">
+
+                    </VBox>
                 </VBox>
             </f:content>
             <f:footer>
@@ -385,7 +396,7 @@
 
         </Panel> -->
 
-        <!-- <VBox id="idVBox_QRCode" visible="false"> -->
+        <!-- <VBox id="idVBox_QRCode1" visible="false"> -->
         <!-- Canvas element to render the QR code -->
         <!-- <canvas id="qrCanvas" width="200" height="200" style="display:none;"></canvas> -->
         <!-- </VBox> -->

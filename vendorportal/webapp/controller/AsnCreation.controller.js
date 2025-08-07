@@ -1,8 +1,17 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "hodek/vendorportal/model/models",
-    "hodek/vendorportal/utils/Formatter"
-], (Controller, Models, Formatter) => {
+    "hodek/vendorportal/model/qrcode",
+    "hodek/vendorportal/utils/Formatter",
+    "sap/m/Dialog",
+    "sap/m/Button",
+    "sap/m/MessageBox",
+    "sap/m/MessageToast",
+    "sap/ui/core/Fragment",
+    "sap/m/library",
+    'sap/ui/core/library',
+    "sap/ui/core/format/DateFormat"
+], (Controller, Models,QRCode, Formatter, Dialog, Button, MessageBox, MessageToast, Fragment, mobileLibrary, coreLibrary, DateFormat) => {
     "use strict";
 
     return Controller.extend("hodek.vendorportal.controller.AsnCreation", {
@@ -34,10 +43,10 @@ sap.ui.define([
             // this.byId("idRAII_InvDate").setMaxDate(new Date);
             // this.byId("idRAII_LR_Date").setMaxDate(new Date);
 
-            this.f4HelpModel = this.getOwnerComponent().getModel();
+            this.f4HelpModel = this.getOwnerComponent().getModel("vendorModel");
             //new sap.ui.model.odata.v2.ODataModel("https://my420245.s4hana.cloud.sap/sap/opu/odata/sap/ZSB_INWARDGATEENTRY/");
             //var odataModel = new sap.ui.model.odata.ODataModel("https://my420245.s4hana.cloud.sap/sap/opu/odata/sap/ZSB_INWARDGATEENTRY/"",{user:shadab.hussain@techorbitgroup.com,password:Abap4Ever});
-            this.inGateEntryModel = this.getOwnerComponent().getModel("ZSB_INWARDGATEENTRY");
+            this.inGateEntryModel = this.getOwnerComponent().getModel("vendorModel");
             //https://my420225-api.s4hana.cloud.sap/sap/opu/odata/sap/YY1_CHALLANNOF4HELP_CDS/YY1_ChallanNoF4Help?$format=json
 
             /*this.challanModel = new sap.ui.model.odata.ODataModel(`https://${systemHost}-api.s4hana.cloud.sap/sap/opu/odata/sap/YY1_CHALLANNOF4HELP_CDS/`, {
@@ -47,8 +56,8 @@ sap.ui.define([
             });*/
 
             setTimeout(function () {
-                that.getPlantData();
-                that.getTransporter();
+                // that.getPlantData();
+                // that.getTransporter();
             }, 300);
 
             /*this.byId("idInpRAPOItemQuantity").onChange(function(oEvent) {
@@ -1011,7 +1020,7 @@ sap.ui.define([
                 amountInput.setValueState(sap.ui.core.ValueState.None);
                 return;
             }
-            let maxValue = parseFloat(binding.Quantity) - parseFloat(binding.postedquantity); // Set the maximum value you want to allow
+            let maxValue = parseFloat(binding.Quantity1) - parseFloat(binding.postedquantity); // Set the maximum value you want to allow
 
             // Allow only numbers and check if the value exceeds maxValue
             if (isNaN(value) || value > maxValue) {
@@ -1034,7 +1043,7 @@ sap.ui.define([
 
         calculateMaxAmoutValue_RAPO: function (enteredQty) {
             let poTable = this.getView().byId("idTable_RAPO");
-            let poTableData = poTable.getModel().getData();
+            let poTableData = poTable.getModel("AsnItemsModel").getProperty("/Results");
             this.maxRAPOAmountAllowed = 0;
             if (this.selected_Po_Scheduling_Type === "PurchaseOrder") {
                 let maxAmountForItem = 0;
@@ -1472,12 +1481,7 @@ sap.ui.define([
         onSave: function () {
             let that = this;
             let oView = this.getView();
-            let Plant = oView.byId("idDropdownPlant").getSelectedKey(),
-                sInwardtype = oView.byId("idDropdownInwardType").getSelectedKey();
-            if ((!Plant) || (!sInwardtype)) {
-                MessageToast.show("Fill all mandatory fields");
-                return;
-            }
+            let Plant = oView.byId("idDropdownPlant").getValue();
 
             let oDateFormat = DateFormat.getInstance({
                 pattern: "yyyy-MM-dd'T'00:00:00"
@@ -1488,114 +1492,148 @@ sap.ui.define([
                 SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;
 
 
-            if (sInwardtype === "ReceiptAgainstPO") {
-                var Inwardtype = "RECPO";
-                /*SystemDate = oDateFormat.format(new Date(oView.byId("idRAPO_Date").getValue())),
-                time = oView.byId("idRAPO_Time").getValue().split(":"),
-                hours = time[0].length === 1 ? ('0' + time[0]) : time[0],
-                SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;*/
-                var Fiscalyear = oView.byId("idFiscalYear").getValue(),
-                    InvoiceNo = oView.byId("idDocInvNo").getValue(),
-                    InvoiceDate = oDateFormat.format(oView.byId("idRAPO_InvDate").getDateValue()),
-                    Lrdate = oDateFormat.format(oView.byId("idRAPO_LR_Date").getDateValue()),
-                    Lrnumber = oView.byId("idRAPO_LR_No").getValue(),
-                    Ponumber = oView.byId("idRAPO_PO_Order").getValue(),
-                    Vendor = this.selectedPOSchAggrVendor,
-                    Ewayno = oView.byId("idRAPO_EwayNo").getValue(),
-                    Amount = oView.byId("idRAPO_Amount").getValue(),
-                    Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
-                    Transporter = oView.byId("idRAPO_Trasporter").getValue();
-                if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
-                    MessageToast.show("Fill all mandatory fields");
-                    return;
-                }
+            // if (sInwardtype === "ReceiptAgainstPO") {
+            //     var Inwardtype = "RECPO";
+            //     /*SystemDate = oDateFormat.format(new Date(oView.byId("idRAPO_Date").getValue())),
+            //     time = oView.byId("idRAPO_Time").getValue().split(":"),
+            //     hours = time[0].length === 1 ? ('0' + time[0]) : time[0],
+            //     SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;*/
+            //     var Fiscalyear = oView.byId("idFiscalYear").getValue(),
+            //         InvoiceNo = oView.byId("idDocInvNo").getValue(),
+            //         InvoiceDate = oDateFormat.format(oView.byId("idRAPO_InvDate").getDateValue()),
+            //         Lrdate = oDateFormat.format(oView.byId("idRAPO_LR_Date").getDateValue()),
+            //         Lrnumber = oView.byId("idRAPO_LR_No").getValue(),
+            //         Ponumber = oView.byId("idRAPO_PO_Order").getValue(),
+            //         Vendor = this.selectedPOSchAggrVendor,
+            //         Ewayno = oView.byId("idRAPO_EwayNo").getValue(),
+            //         Amount = oView.byId("idRAPO_Amount").getValue(),
+            //         Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
+            //         Transporter = oView.byId("idRAPO_Trasporter").getValue();
+            //     if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
+            //         MessageToast.show("Fill all mandatory fields");
+            //         return;
+            //     }
 
-                let isQuantityEntered = true;
-                var itemData = [];
-                this.getView().byId("idTable_RAPO").getModel().getData().filter(item => {
-                    if (item.AvailableQuantity === "" || item.EnteredQuantity === "") {
-                        isQuantityEntered = false;
-                    }
-                    let obj = {
-                        "Ponumber": Ponumber,
-                        "LineItem": item.PurchaseOrderItem,
-                        "Material": item.Material,
-                        "Materialdesc": item.PurchaseOrderItemText,
-                        "Quantity": parseFloat(item.Quantity).toFixed(2),
-                        "PostedQuantity": parseFloat(item.AvailableQuantity).toFixed(2)
-                    };
-                    itemData.push(obj);
-                });
-                if (!isQuantityEntered) {
-                    MessageToast.show("Enter Item Quantity");
-                    return;
-                }
-            }
-            else if (sInwardtype === "ReceiptAsItIs") {
-                var Inwardtype = "RECASIS";
-                /*SystemDate = oDateFormat.format(new Date(oView.byId("idRAII_Date").getValue())),
-                time = oView.byId("idRAII_Time").getValue().split(":"),
-                hours = time[0].length === 1 ? ('0' + time[0]) : time[0],
-                SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;*/
-                var Fiscalyear = oView.byId("idRAII_FiscalYear").getValue(),
-                    InvoiceNo = oView.byId("idRAII_DocInvNo").getValue(),
-                    InvoiceDate = oDateFormat.format(oView.byId("idRAII_InvDate").getDateValue()),
-                    Lrdate = oDateFormat.format(oView.byId("idRAII_LR_Date").getDateValue()),
-                    Lrnumber = oView.byId("idRAII_LR_No").getValue(),
-                    Ponumber = oView.byId("idRAII_Challan").getValue(),
-                    Vendor = oView.byId("idRAII_Vendor").getValue(),
-                    Ewayno = oView.byId("idRAII_EwayNo").getValue(),
-                    Amount = oView.byId("idRAII_Amount").getValue(),
-                    Vehicleno = oView.byId("idRAII_VehicalNo").getValue(),
-                    Transporter = oView.byId("idRAII_Trasporter").getValue();
-                if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
-                    MessageToast.show("Fill all mandatory fields");
-                    return;
-                }
+            //     let isQuantityEntered = true;
+            //     var itemData = [];
+            //     this.getView().byId("idTable_RAPO").getModel().getData().filter(item => {
+            //         if (item.AvailableQuantity === "" || item.EnteredQuantity === "") {
+            //             isQuantityEntered = false;
+            //         }
+            //         let obj = {
+            //             "Ponumber": Ponumber,
+            //             "LineItem": item.PurchaseOrderItem,
+            //             "Material": item.Material,
+            //             "Materialdesc": item.PurchaseOrderItemText,
+            //             "Quantity": parseFloat(item.Quantity).toFixed(2),
+            //             "PostedQuantity": parseFloat(item.AvailableQuantity).toFixed(2)
+            //         };
+            //         itemData.push(obj);
+            //     });
+            //     if (!isQuantityEntered) {
+            //         MessageToast.show("Enter Item Quantity");
+            //         return;
+            //     }
+            // }
+            // else if (sInwardtype === "ReceiptAsItIs") {
+            //     var Inwardtype = "RECASIS";
+            //     /*SystemDate = oDateFormat.format(new Date(oView.byId("idRAII_Date").getValue())),
+            //     time = oView.byId("idRAII_Time").getValue().split(":"),
+            //     hours = time[0].length === 1 ? ('0' + time[0]) : time[0],
+            //     SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;*/
+            //     var Fiscalyear = oView.byId("idRAII_FiscalYear").getValue(),
+            //         InvoiceNo = oView.byId("idRAII_DocInvNo").getValue(),
+            //         InvoiceDate = oDateFormat.format(oView.byId("idRAII_InvDate").getDateValue()),
+            //         Lrdate = oDateFormat.format(oView.byId("idRAII_LR_Date").getDateValue()),
+            //         Lrnumber = oView.byId("idRAII_LR_No").getValue(),
+            //         Ponumber = oView.byId("idRAII_Challan").getValue(),
+            //         Vendor = oView.byId("idRAII_Vendor").getValue(),
+            //         Ewayno = oView.byId("idRAII_EwayNo").getValue(),
+            //         Amount = oView.byId("idRAII_Amount").getValue(),
+            //         Vehicleno = oView.byId("idRAII_VehicalNo").getValue(),
+            //         Transporter = oView.byId("idRAII_Trasporter").getValue();
+            //     if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
+            //         MessageToast.show("Fill all mandatory fields");
+            //         return;
+            //     }
 
-                let isQuantityEntered = true;
-                let isMaterialSelected = true;
-                var itemData = [];
-                this.getView().byId("idTable_RAII").getModel().getData().filter(item => {
-                    if (item.Product === "") {
-                        isMaterialSelected = false;
-                    }
-                    if (item.AvailableQuantity === "") {
-                        isQuantityEntered = false;
-                    }
-                    let obj = {
-                        "Ponumber": Ponumber,
-                        "LineItem": item.Itemno,
-                        "Material": item.Product,
-                        "Materialdesc": item.ProductName,
-                        "Quantity": parseFloat(item.AvailableQuantity).toFixed(2)
-                    };
-                    itemData.push(obj);
-                });
-                if (!isMaterialSelected) {
-                    MessageToast.show("Select Material");
-                    return;
-                }
-                if (!isQuantityEntered) {
-                    MessageToast.show("Enter Item Quantity");
-                    return;
-                }
-            }
-            else {
-                var Inwardtype = "RECCH";
+            //     let isQuantityEntered = true;
+            //     let isMaterialSelected = true;
+            //     var itemData = [];
+            //     this.getView().byId("idTable_RAII").getModel().getData().filter(item => {
+            //         if (item.Product === "") {
+            //             isMaterialSelected = false;
+            //         }
+            //         if (item.AvailableQuantity === "") {
+            //             isQuantityEntered = false;
+            //         }
+            //         let obj = {
+            //             "Ponumber": Ponumber,
+            //             "LineItem": item.Itemno,
+            //             "Material": item.Product,
+            //             "Materialdesc": item.ProductName,
+            //             "Quantity": parseFloat(item.AvailableQuantity).toFixed(2)
+            //         };
+            //         itemData.push(obj);
+            //     });
+            //     if (!isMaterialSelected) {
+            //         MessageToast.show("Select Material");
+            //         return;
+            //     }
+            //     if (!isQuantityEntered) {
+            //         MessageToast.show("Enter Item Quantity");
+            //         return;
+            //     }
+            // }
+            // else {
+            //     var Inwardtype = "RECCH";
+            // }
+            let InvoiceNo = this.getView().byId("idDocInvNo").getValue();
+            let InvoiceDate = oDateFormat.format(oView.byId("idRAPO_InvDate").getDateValue()),
+                Lrnumber = oView.byId("idRAPO_LR_No").getValue(),
+                Lrdate = oDateFormat.format(oView.byId("idRAPO_LR_Date").getDateValue()),
+                Ponumber = oView.byId("idRAPO_PO_Order").getValue(),
+                Vendor = this.selectedPOSchAggrVendor,
+                Ewayno = oView.byId("idRAPO_EwayNo").getValue(),
+                Amount = oView.byId("idRAPO_Amount").getValue(),
+                Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
+                purchaseOrder = oView.byId("idRAPO_PO_Order").getValue(),
+                Transporter = oView.byId("idRAPO_Trasporter").getValue();
+            if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
+                MessageToast.show("Fill all mandatory fields");
+                return;
             }
 
+            let isQuantityEntered = true;
+            var itemData = [];
+            this.getView().byId("idTable_RAPO").getModel("AsnItemsModel").getProperty("/Results").filter(item => {
+                if (item.AvailableQuantity === "" || item.EnteredQuantity === "") {
+                    isQuantityEntered = false;
+                }
+                let obj = {
+                    "Ponumber": Ponumber,
+                    "LineItem": item.PurchaseOrderItem,
+                    "Material": item.Material,
+                    "Materialdesc": item.PurchaseOrderItemText,
+                    "Quantity": parseFloat(item.Quantity1).toFixed(2),
+                    "Postedquantity": parseFloat(item.AvailableQuantity).toFixed(2)
+                };
+                itemData.push(obj);
+            });
+            if (!isQuantityEntered) {
+                MessageToast.show("Enter Item Quantity");
+                return;
+            }
             let payload = {
+                // "Asn":"abas",
                 "InvoiceNo": InvoiceNo,
+                "Ponumber": purchaseOrder,
                 "Plant": Plant,
-                "Inwardtype": Inwardtype,
-                "Fiscalyear": Fiscalyear,
                 "SystemDate": SystemDate,
                 "SystemTime": SystemTime,
                 "InvoiceDate": InvoiceDate, //"2024-12-29T00:00:00",
                 "Lrdate": (Lrdate !== "" ? Lrdate : null), //"2024-12-29T00:00:00",
                 "Lrnumber": Lrnumber,
-                "Ponumber": Ponumber,
                 "Vendor": Vendor,
                 "Ewayno": Ewayno,
                 "Amount": parseFloat(Amount).toFixed(2),
@@ -1619,7 +1657,7 @@ sap.ui.define([
                         type: 'Message',
                         state: 'Success',
                         content: new sap.m.Text({
-                            text: `Gate Entry Number ${gateEntryNo} generated successfully`
+                            text: `Asn  ${gateEntryNo} generated successfully`
                         }),
                         beginButton: new Button({
                             text: 'Download ASN',
@@ -1678,7 +1716,7 @@ sap.ui.define([
             oQRCodeBox.addItem(oHtmlComp);
 
             setTimeout(function () {
-                let sQRCodeNumber = qrData.GateEntryId; // Data to encode in QR Code
+                let sQRCodeNumber = qrData.AsnNo; // Data to encode in QR Code
                 // Generate QR Code using qrcode.js
                 QRCode.toCanvas(document.getElementById('qrCanvas'), sQRCodeNumber, function (error) {
                     if (error) {
@@ -1903,7 +1941,7 @@ sap.ui.define([
                 urlParameters: sParameters,
                 success: function (oResponse) {
                     that.aGateEntryNum = oResponse.results.sort((a, b) => {
-                        return b.GateEntryId - a.GateEntryId;
+                        return b.AsnNo - a.AsnNo;
                     });
                 },
                 error: function (oError) {
@@ -1918,11 +1956,11 @@ sap.ui.define([
                 let selectedInput = oEvent.getSource();
                 let oCustomListItem = new sap.m.StandardListItem({
                     active: true,
-                    title: "{GateEntryId}"
+                    title: "{AsnNo}"
                 });
 
                 let oSelectDialog = new sap.m.SelectDialog({
-                    title: "Select Gate Entry ID",
+                    title: "Select ASN ID",
                     noDataText: "No Data",
                     width: "50%",
                     growing: true,
@@ -1934,12 +1972,12 @@ sap.ui.define([
                             let selectedValue = aContexts.map(function (oContext) {
                                 return oContext.getObject();
                             });
-                            selectedInput.setValue(selectedValue[0].GateEntryId);
+                            selectedInput.setValue(selectedValue[0].AsnNo);
                         }
                     },
                     liveChange: function (oEvent) {
                         let sValue = oEvent.getParameter("value");
-                        let custFilter = new sap.ui.model.Filter("GateEntryId", sap.ui.model.FilterOperator.Contains, sValue);
+                        let custFilter = new sap.ui.model.Filter("AsnNo", sap.ui.model.FilterOperator.Contains, sValue);
                         let oBinding = oEvent.getSource().getBinding("items");
                         oBinding.filter(custFilter);
                     }
@@ -1958,16 +1996,16 @@ sap.ui.define([
 
         onRePrintGateEntryQR: function () {
             let that = this;
-            let sPlant = this.getView().byId("idDropdownPlant").getSelectedKey();
+            let sPlant = this.getView().byId("idDropdownPlant").getValue();
             if (!sPlant) {
                 MessageToast.show("Select a Plant");
                 return;
             }
             if (!this.sReprintQRDialog) {
                 let gateEntryNoInput = new sap.m.Input({
+                    id:'reprintAsnInput',
                     maxLength: 20,
                     showValueHelp: true,
-                    showValueHelpOnly: true,
                     valueHelpRequest: function (oEvent) {
                         that.GateEntryNoF4Help(oEvent);
                     }/*,
@@ -1979,7 +2017,7 @@ sap.ui.define([
                     }*/
                 });
                 this.sReprintQRDialog = new sap.m.Dialog({
-                    title: "Reprint Gate Entry QR",
+                    title: "ASN QR",
                     contentWidth: "500px",
                     contentHeight: "125px",
                     content:
@@ -1988,7 +2026,7 @@ sap.ui.define([
                                 new sap.m.VBox({
                                     items: [
                                         new sap.m.Label({
-                                            text: 'Gate Entry Number',
+                                            text: 'ASN',
                                             required: true
                                         }),
                                         gateEntryNoInput
@@ -1997,19 +2035,19 @@ sap.ui.define([
                             ]
                         }).addStyleClass('sapUiContentPadding', 'sapUiSmallMarginTop'),
                     beginButton: new sap.m.Button({
-                        type: ButtonType.Emphasized,
+                        type: sap.m.ButtonType.Emphasized,
                         text: "Reprint QR",
                         press: function () {
                             let sGateEntryNo = gateEntryNoInput.getValue();
                             if (sGateEntryNo === "") {
-                                MessageToast.show('Select the Gate Entry Number');
+                                MessageToast.show('Select the ASN');
                                 return;
                             }
                             let qrData = that.aGateEntryNum.find(item => {
-                                return item.GateEntryId === sGateEntryNo;
+                                return item.AsnNo === sGateEntryNo;
                             });
                             if (!qrData) {
-                                MessageToast.show('Select valid Gate Entry Number');
+                                MessageToast.show('Select valid ASN');
                                 return;
                             }
                             that.onViewQR(qrData);
@@ -2041,18 +2079,19 @@ sap.ui.define([
                 value1: sPlant
             });
             that.getView().setBusy(true);
-            that.f4HelpModel.read("/GateEntryNoF4Help", { //InwardGateHeader
+            that.f4HelpModel.read("/InwardGateHeader", { //InwardGateHeader
                 filters: [filter],
                 urlParameters: sParameters,
                 success: function (oResponse) {
                     that.getView().setBusy(false);
                     that.aGateEntryNum = oResponse.results.sort((a, b) => {
-                        return b.GateEntryId - a.GateEntryId;
+                        return b.AsnNo - a.AsnNo;
                     });
+                    that.sReprintQRDialog.open();
                 },
                 error: function (oError) {
                     that.getView().setBusy(false);
-                    MessageBox.error("Failed to load gate entry number list");
+                    MessageBox.error("Failed to load Asn in Value Help");
                 }
             });
         },
@@ -2062,7 +2101,7 @@ sap.ui.define([
 
         downloadQR: function () {
             let that = this;
-            let gateEntryNo = "The QR";
+            let gateEntryNo = sap.ui.getCore().byId("reprintAsnInput").getValue();
             //let oQRCodeBox = new sap.m.VBox({});
             let oQRCodeBox = this.getView().byId("idVBox_QRCode");
             oQRCodeBox.setVisible(true);

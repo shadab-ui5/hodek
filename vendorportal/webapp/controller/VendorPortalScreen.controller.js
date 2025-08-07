@@ -9,62 +9,93 @@ sap.ui.define([
         onInit: function () {
             const oVendorModel = new sap.ui.model.json.JSONModel([]);
             this.getView().setModel(oVendorModel, "VendorPortalModel");
-        
+
             const oODataModel = this.getOwnerComponent().getModel("vendorModel");
             const oFilterModel = new sap.ui.model.json.JSONModel();
             const oTableModel = new sap.ui.model.json.JSONModel();
             const oRouteData = new sap.ui.model.json.JSONModel();
             const oPlantModelVh = new sap.ui.model.json.JSONModel();
             const oCompanyModel = new sap.ui.model.json.JSONModel();
-        
+
             this.getView().setModel(oCompanyModel, "CompanyCodeModel");
             this.getView().setModel(oPlantModelVh, "PlantModelVh");
             this.getOwnerComponent().setModel(oFilterModel, "filterModel");
             this.getOwnerComponent().setModel(oTableModel, "TableModelPO");
             this.getOwnerComponent().setModel(oRouteData, "RoutePoData");
             this.getView().setModel(oFilterModel, "FilterModel");
-        
+
             const oBusyDialog = new sap.m.BusyDialog({ text: "Loading data..." });
             oBusyDialog.open();
-        
+
             let that = this;
-        
+            const oPoModelVh = new sap.ui.model.json.JSONModel();
+            const oSupplierVHModel = new sap.ui.model.json.JSONModel([]);
+            const oPgVHModel = new sap.ui.model.json.JSONModel([]);
+            this.getOwnerComponent().setModel(oSupplierVHModel, "SupplierVHModel");
+            this.getOwnerComponent().setModel(oPgVHModel, "PgVHModel");
+            this.getOwnerComponent().setModel(oPoModelVh, "PoModelVh");
+            if (sap.ushell && sap.ushell.Container) {
+                sap.ushell.Container.getServiceAsync("UserInfo").then(function (UserInfo) {
+                    let loginUser = UserInfo.getId();
+                    Models.getUserInfo(that, loginUser).then((oData) => {
+                        const uniqueGroups = [...new Map(oData.results.map(obj => [obj.PurchasingGroup, obj])).values()];
+
+                        that.getOwnerComponent().getModel("PgVHModel").setData(uniqueGroups);
+
+                        that.getOwnerComponent().getModel("SupplierVHModel").setData(oData.results);
+                        console.log("UserInfo Loaded..")
+                        that.loadPurchaseOrderFilter(oBusyDialog);
+                    }).catch((oError) => {
+                        console.error("Failed to load Purchase Orders:", oError);
+                    });
+                });
+            } else {
+                console.warn("Not running in Fiori Launchpad, using fallback user");
+                let loginUser = "CB9980000026"; // fallback or hardcoded for local testing
+                Models.getUserInfo(that, loginUser).then((oData) => {
+                    const uniqueGroups = [...new Map(oData.results.map(obj => [obj.PurchasingGroup, obj])).values()];
+
+                    that.getOwnerComponent().getModel("PgVHModel").setData(uniqueGroups);
+
+                    that.getOwnerComponent().getModel("SupplierVHModel").setData(oData.results);
+                    console.log("UserInfo Loaded..")
+                    that.loadPurchaseOrderFilter(oBusyDialog);
+                }).catch((oError) => {
+                    console.error("Failed to load Purchase Orders:", oError);
+                });;
+            }
+
+        },
+        loadPurchaseOrderFilter: function (oBusyDialog) {
             // Load PO data and build company code model
+            let that = this;
             Models._loadPurchaseOrders(this, "", 0, 4999).then((result) => {
                 const uniqueCompanies = [...new Map(
                     result
                         .filter(item => item.CompanyCode)
                         .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode }])
                 ).values()];
-        
+
                 that.getView().getModel("CompanyCodeModel").setData(uniqueCompanies);
                 that.getView().byId("idPoCompanyCode")?.getBinding("items")?.refresh();
-        
+
                 console.log("Company codes loaded:", that.getView().getModel("CompanyCodeModel").getData());
-        
+
                 // ✅ Load dependent filters AFTER company codes are set
-                that._loadAllFilters();
-        
+                const aCompanyCodes = this.getView().getModel("CompanyCodeModel")?.getData();
+
+                // Example: preselect first company, or filter something else
+                if (aCompanyCodes?.length === 1) {
+                    this.getView().byId("idPoCompanyCode").setSelectedKey(aCompanyCodes[0].CompanyCode);
+                }
+
                 oBusyDialog.close();
             }).catch((oError) => {
                 oBusyDialog.close();
                 console.error("Failed to load Purchase Orders:", oError);
             });
         },
-        _loadAllFilters: function () {
-            // Now CompanyCodeModel is ready, load other filters that depend on it
-            console.log("Now loading filters using CompanyCodeModel");
-        
-            const aCompanyCodes = this.getView().getModel("CompanyCodeModel")?.getData();
-        
-            // Example: preselect first company, or filter something else
-            if (aCompanyCodes?.length === 1) {
-                this.getView().byId("idPoCompanyCode").setSelectedKey(aCompanyCodes[0].CompanyCode);
-            }
-        
-            // You can also load SupplierVh, PlantVh, etc., from here safely
-        },
-        
+
         formatter: Formatter,
         onSearch: function (oEvent) {
             const oView = this.getView();
