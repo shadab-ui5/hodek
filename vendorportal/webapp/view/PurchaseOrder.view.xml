@@ -32,7 +32,7 @@
                             <VBox id="_IDGenVBox15" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel17" class="labelDesin" design="Bold" text="Plant" />
                                 <!-- <Text id="idPoHeadPlant" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/PlantName}"/> -->
-                                <Text id="_IDGenText19" class="textDesin" text="{RoutePoData>/PoHeader/Plant}" />
+                                <Text id="_IDGenText19" class="textDesin" text="{RoutePoData>/PoHeader/PlantName}({RoutePoData>/PoHeader/Plant})" />
                             </VBox>
                             <VBox id="_IDGenVBox16" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel18" class="labelDesin" design="Bold" text="Purchase Order" />
@@ -42,7 +42,7 @@
                             <VBox id="_IDGenVBox17" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel19" class="labelDesin" design="Bold" text="Supplier" />
                                 <!-- <Text id="idPoHeadSupplier" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/Supplier}"/> -->
-                                <Text id="_IDGenText21" class="textDesin" text="{RoutePoData>/PoHeader/Supplier}" />
+                                <Text id="_IDGenText21" class="textDesin" text="{RoutePoData>/PoHeader/SupplierName}({RoutePoData>/PoHeader/Supplier})" />
                             </VBox>
                             <VBox id="_IDGenVBox18" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel20" class="labelDesin" design="Bold" text="Purchase Order Date" />

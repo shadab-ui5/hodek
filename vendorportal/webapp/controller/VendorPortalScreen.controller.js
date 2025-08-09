@@ -7,9 +7,6 @@ sap.ui.define([
 
     return Controller.extend("hodek.vendorportal.controller.VendorPortalScreen", {
         onInit: function () {
-            const oVendorModel = new sap.ui.model.json.JSONModel([]);
-            this.getView().setModel(oVendorModel, "VendorPortalModel");
-
             const oODataModel = this.getOwnerComponent().getModel("vendorModel");
             const oFilterModel = new sap.ui.model.json.JSONModel();
             const oTableModel = new sap.ui.model.json.JSONModel();
@@ -22,7 +19,6 @@ sap.ui.define([
             this.getOwnerComponent().setModel(oFilterModel, "filterModel");
             this.getOwnerComponent().setModel(oTableModel, "TableModelPO");
             this.getOwnerComponent().setModel(oRouteData, "RoutePoData");
-            this.getView().setModel(oFilterModel, "FilterModel");
 
             const oBusyDialog = new sap.m.BusyDialog({ text: "Loading data..." });
             oBusyDialog.open();
@@ -73,7 +69,7 @@ sap.ui.define([
                 const uniqueCompanies = [...new Map(
                     result
                         .filter(item => item.CompanyCode)
-                        .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode }])
+                        .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode,CompanyCodeName:item.CompanyCodeName}])
                 ).values()];
 
                 that.getView().getModel("CompanyCodeModel").setData(uniqueCompanies);

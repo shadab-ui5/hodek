@@ -16,12 +16,6 @@
             <Column>
                 <Text text="Supplier Name" />
             </Column>
-            <Column>
-                <Text text="Purchasing Group" />
-            </Column>
-            <Column>
-                <Text text="Purchasing Group Name" />
-            </Column>
         </columns>
 
         <items>
@@ -29,8 +23,7 @@
                 <cells>
                     <Text text="{SupplierVHModel>Supplier}" />
                     <Text text="{SupplierVHModel>Suppliername}" />
-                    <Text text="{SupplierVHModel>PurchasingGroup}" />
-                    <Text text="{SupplierVHModel>PurchasingGrpName}" />
+                    
                 </cells>
             </ColumnListItem>
         </items>

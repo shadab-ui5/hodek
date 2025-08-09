@@ -132,10 +132,24 @@
           ]
         },
         {
+          "name": "RouteScheduleAgreeOrder",
+          "pattern": "sano/{po}",
+          "target": [
+            "TargetScheduleAgreeOrder"
+          ]
+        },
+        {
           "name": "RouteAsnCreation",
           "pattern": "asn/{po}",
           "target": [
             "TargetAsnCreation"
+          ]
+        },
+        {
+          "name": "RouteAsnSaCreation",
+          "pattern": "SAasn/{po}",
+          "target": [
+            "TargetAsnSaCreation"
           ]
         },
         {
@@ -165,9 +179,27 @@
           "controlAggregation": "pages",
           "clearControlAggregation": true
         },
+        "TargetScheduleAgreeOrder": {
+          "id": "ScheduleAgreeOrder",
+          "name": "ScheduleAgreeOrder",
+          "viewType": "XML",
+          "viewLevel": 2,
+          "controlId": "Main__NavContainer",
+          "controlAggregation": "pages",
+          "clearControlAggregation": true
+        },
         "TargetAsnCreation": {
           "id": "AsnCreation",
           "name": "AsnCreation",
+          "viewType": "XML",
+          "viewLevel": 2,
+          "controlId": "Main__NavContainer",
+          "controlAggregation": "pages",
+          "clearControlAggregation": true
+        },
+        "TargetAsnSaCreation": {
+          "id": "AsnSaCreation",
+          "name": "AsnSaCreation",
           "viewType": "XML",
           "viewLevel": 2,
           "controlId": "Main__NavContainer",

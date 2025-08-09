@@ -49,7 +49,47 @@ sap.ui.define([
                     oODataModel.read("/PoItem", {
                         filters: aFilters,
                         success: function (oData) {
+                            if (oData && oData.results) {
+                                oData.results.sort(function (a, b) {
+                                    var itemA = parseInt(a.PurchaseOrderItem, 10);
+                                    var itemB = parseInt(b.PurchaseOrderItem, 10);
+                                    return itemA - itemB; // Ascending order
+                                });
+                            }
                             oModel.setProperty("/POItems", oData.results);
+                            if (oTable) {
+                                oTable.setBusy(false);
+                            }
+                            resolve();
+                        },
+                        error: function (err) {
+                            console.error("Error fetching PO Items", err);
+                            if (oTable) {
+                                oTable.setBusy(false);
+                            }
+                            reject(err);
+                        }
+                    });
+                });
+            },
+            loadSaItems: function (oODataModel, oModel, filterPO, oTable) {
+                return new Promise((resolve, reject) => {
+                    // Define filters only if PurchaseOrder is present
+                    const aFilters = [];
+                    if (filterPO) {
+                        aFilters.push(new sap.ui.model.Filter("SchedulingAgreement", sap.ui.model.FilterOperator.EQ, filterPO));
+                    }
+                    oODataModel.read("/SaItem", {
+                        filters: aFilters,
+                        success: function (oData) {
+                            if (oData && oData.results) {
+                                oData.results.sort(function (a, b) {
+                                    var itemA = parseInt(a.SchedulingAgreementItem, 10);
+                                    var itemB = parseInt(b.SchedulingAgreementItem, 10);
+                                    return itemA - itemB; // Ascending order
+                                });
+                            }
+                            oModel.setProperty("/SaItems", oData.results);
                             if (oTable) {
                                 oTable.setBusy(false);
                             }
@@ -162,6 +202,103 @@ sap.ui.define([
                     }
                 });
             },
+            searchSaHeader: function (_this, oView, oModel, oTableModel) {
+                const aFilters = [];
+                let oDateFormat = DateFormat.getInstance({
+                    pattern: "yyyy-MM-dd'T'00:00:00"
+                });
+                // Supplier (MultiComboBox)
+                const aSelectedSuppliers = oView.byId("idPoSupplier").getTokens().map(function (oToken) {
+                    return oToken.getKey();
+                });
+                if (aSelectedSuppliers.length > 0) {
+                    const supplierFilters = aSelectedSuppliers.map(s => new sap.ui.model.Filter("Supplier", "EQ", s));
+                    aFilters.push(new sap.ui.model.Filter(supplierFilters, false)); // OR condition within supplier group
+                } 
+                // else {
+                //     let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
+                //     const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
+                //     const oOrFilter = new sap.ui.model.Filter(
+                //         uniqueSupplier.map(group =>
+                //             new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
+                //         ),
+                //         false // OR
+                //     );
+                //     aFilters.push(oOrFilter);
+                // }
+
+                // Purchase Order 
+                const sPurchaseOrder = oView.byId("idPoNumber").getTokens().map(function (oToken) {
+                    return oToken.getKey();
+                });
+                if (sPurchaseOrder.length > 0) {
+                    const purchaseOrderFilters = sPurchaseOrder.map(s => new sap.ui.model.Filter("SchedulingAgreement", "EQ", s));
+                    aFilters.push(new sap.ui.model.Filter(purchaseOrderFilters, false)); // OR condition within supplier group
+                }
+
+                // Purchasing Group
+                // const sPurchGroup = oView.byId("idPoPurchGroup").getTokens().map(function (oToken) {
+                //     return oToken.getKey();
+                // });
+                // if (sPurchGroup.length > 0) {
+                //     const PurGroupFilters = sPurchGroup.map(s => new sap.ui.model.Filter("PurchasingGroup", "EQ", s));
+                //     aFilters.push(new sap.ui.model.Filter(PurGroupFilters, false)); // OR condition within supplier group
+                // }
+                // Plant Group
+                const aPlantFilter = oView.byId("idFilterPlant").getTokens().map(function (oToken) {
+                    return oToken.getKey();
+                });
+                if (aPlantFilter.length > 0) {
+                    const PlantFilters = aPlantFilter.map(s => new sap.ui.model.Filter("Plant", "EQ", s));
+                    aFilters.push(new sap.ui.model.Filter(PlantFilters, false)); // OR condition within supplier group
+                }
+
+                // Company Code
+                const sCompanyCode = oView.byId("idSaCompanyCode").getSelectedKey();
+                if (sCompanyCode) {
+                    aFilters.push(new sap.ui.model.Filter("CompanyCode", "EQ", sCompanyCode));
+                }
+
+                // Purchase Order Date
+                const oDRS = _this.getView().byId("idPoPurchDate");
+                const oStartDate = oDRS.getDateValue();
+                const oEndDate = oDRS.getSecondDateValue();
+
+                if (oStartDate && oEndDate) {
+                    // const fromDate = Formatter.formatDateToYyyyMmDd(oStartDate); // "2025-08-07"
+                    // const toDate = Formatter.formatDateToYyyyMmDd(oEndDate);     // "2025-08-08"
+                    const fromDate = oDateFormat.format(new Date(oStartDate)); // "2025-08-07"
+                    const toDate = oDateFormat.format(new Date(oEndDate));     // "2025-08-08"
+
+                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.GE, fromDate));
+                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.LE, toDate));
+                }
+                oView.setBusy(true);
+                // 🔍 Read data from OData service with filters
+                oModel.read("/SaHdr", {
+                    filters: aFilters,
+                    success: function (oData) {
+                        const map = new Map();
+                        const uniqueResults = [];
+
+                        oData.results.forEach(item => {
+                            const key = item.SchedulingAgreement + "|" + item.PaymentTerms + "|" + item.SupplierRespSalesPersonName; // Customize key fields
+                            if (!map.has(key)) {
+                                map.set(key, true);
+                                uniqueResults.push(item);
+                            }
+                        });
+
+                        oTableModel.setProperty("/POHeaders", uniqueResults); // bind this to your table
+                        console.log("searched header PO>>", oData.results)
+                        oView.setBusy(false);
+                    },
+                    error: function (err) {
+                        console.error("Error while fetching filtered PO headers", err);
+                        oView.setBusy(false);
+                    }
+                });
+            },
 
             _loadPurchaseOrders: function (_this, sQuery, iSkip, iTop) {
                 return new Promise((resolve, reject) => {
@@ -201,6 +338,56 @@ sap.ui.define([
                                 index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
                             );
                             let oModel = _this.getOwnerComponent().getModel("PoModelVh");
+                            oModel.setProperty("/PurchaseOrders", uniqueResults);
+                            resolve(oData.results)
+
+                        },
+                        error: (err) => {
+                            sap.m.MessageToast.show("Error fetching Purchase Orders.");
+                            reject(err)
+                        }
+                    });
+                })
+            },
+            _loadSchedulingAgre: function (_this, sQuery, iSkip, iTop) {
+                return new Promise((resolve, reject) => {
+                    let oModel = _this.getOwnerComponent().getModel("vendorModel");
+                    let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
+                    const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
+                    console.log("Unique Suppliers:", uniqueSupplier)
+                    // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
+                    let aFilters = [];
+                    if (sQuery) {
+                        let oSearch = new sap.ui.model.Filter({
+                            filters: [
+                                new sap.ui.model.Filter("SchedulingAgreement", "Contains", sQuery),
+                                new sap.ui.model.Filter("Supplier", "Contains", sQuery)
+                            ],
+                            and: false
+                        });
+                        aFilters.push(oSearch);
+                    } 
+                    // else {
+                    //     const oOrFilter = new sap.ui.model.Filter(
+                    //         uniqueSupplier.map(group =>
+                    //             new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
+                    //         ),
+                    //         false // OR
+                    //     );
+                    //     aFilters.push(oOrFilter);
+                    // }
+
+                    oModel.read("/SaHdr", {
+                        filters: aFilters,
+                        urlParameters: {
+                            "$top": iTop,
+                            "$skip": iSkip
+                        },
+                        success: (oData) => {
+                            const uniqueResults = oData.results.filter((item, index, self) =>
+                                index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
+                            );
+                            let oModel = _this.getOwnerComponent().getModel("SaModelVh");
                             oModel.setProperty("/PurchaseOrders", uniqueResults);
                             resolve(oData.results)
 
@@ -260,7 +447,23 @@ sap.ui.define([
                         _this.getView().setBusy(false);
                     }
                 });
-            }
+            },
+            fetchAsnSaItems: function (_this, oFinalFilter) {
+                let oModel = _this.getOwnerComponent().getModel("vendorModel");
+                oModel.read("/ItemforSchAgr", {
+                    filters: [oFinalFilter],
+                    success: (oData) => {
+                        // Set data to a new model to use in table
+                        const oResultModel = new sap.ui.model.json.JSONModel({ Results: oData.results });
+                        _this.getView().setModel(oResultModel, "AsnSaItemsModel");
+                        _this.getView().setBusy(false);
+                    },
+                    error: (oError) => {
+                        console.error("Failed to fetch data from /thirdscreen_po:", oError);
+                        _this.getView().setBusy(false);
+                    }
+                });
+            },
 
 
 

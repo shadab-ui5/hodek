@@ -14,7 +14,7 @@ sap.ui.define([
 ], (Controller, Models,QRCode, Formatter, Dialog, Button, MessageBox, MessageToast, Fragment, mobileLibrary, coreLibrary, DateFormat) => {
     "use strict";
 
-    return Controller.extend("hodek.vendorportal.controller.AsnCreation", {
+    return Controller.extend("hodek.vendorportal.controller.AsnSaCreation", {
         onInit() {
             const oRouter = this.getOwnerComponent().getRouter();
             this.oParameters = {
@@ -68,14 +68,14 @@ sap.ui.define([
                 }
                 that.calculateMaxAmoutValue_RAPO(itemQuantity);
             });*/
-            oRouter.getRoute("RouteAsnCreation").attachPatternMatched(this._onRouteMatched, this);
+            oRouter.getRoute("RouteAsnSaCreation").attachPatternMatched(this._onRouteMatched, this);
 
         },
         _onRouteMatched: function (oEvent) {
             var sPoNumber = oEvent.getParameter("arguments").po;
             this.purchaseOrder = sPoNumber;
             console.log("Routed PO ID:", sPoNumber);
-            const oModel = this.getOwnerComponent().getModel("RoutePoData");
+            const oModel = this.getOwnerComponent().getModel("RouteSaData");
             if (!oModel) {
                 this.onNavBack();
                 return;
@@ -91,21 +91,21 @@ sap.ui.define([
             const sTime = oNow.toTimeString().split(" ")[0];
 
             // Set values into model
-            if (!oData.PoHeader) {
-                oData.PoHeader = {};
+            if (!oData.SaHeader) {
+                oData.SaHeader = {};
             }
 
-            oData.PoHeader.Date = sDate;
-            oData.PoHeader.Time = sTime;
+            oData.SaHeader.Date = sDate;
+            oData.SaHeader.Time = sTime;
 
             oModel.setData(oData);
             this.callThirdScreenPo();
         },
         callThirdScreenPo: function () {
             let aPoData;
-            let oSelectedPoItems = this.getOwnerComponent().getModel("SelectedPoItemsModel");
+            let oSelectedPoItems = this.getOwnerComponent().getModel("SelectedSaItemsModel");
             if (oSelectedPoItems) {
-                aPoData = oSelectedPoItems.getProperty("/POItems")
+                aPoData = oSelectedPoItems.getProperty("/SaItems")
             } else {
                 const oRouter = this.getOwnerComponent().getRouter();
                 oRouter.navTo("RouteVendorPortal");
@@ -118,9 +118,9 @@ sap.ui.define([
             aPoData.forEach(obj => {
                 const oGroupFilter = new sap.ui.model.Filter({
                     filters: [
-                        new sap.ui.model.Filter("Plant", sap.ui.model.FilterOperator.EQ, obj.Plant),
-                        new sap.ui.model.Filter("PurchaseOrder", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrder),
-                        new sap.ui.model.Filter("PurchaseOrderItem", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrderItem)
+                        new sap.ui.model.Filter("SchedulingAgreement", sap.ui.model.FilterOperator.EQ, obj.SchedulingAgreement),
+                        new sap.ui.model.Filter("SchedulingAgreementItem", sap.ui.model.FilterOperator.EQ, obj.SchedulingAgreementItem),
+                        // new sap.ui.model.Filter("PurchaseOrderItem", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrderItem)
                     ],
                     and: true
                 });
@@ -136,7 +136,7 @@ sap.ui.define([
             // Set busy indicator if needed
             this.getView().setBusy(true);
 
-            Models.fetchAsnItems(this, oFinalFilter)
+            Models.fetchAsnSaItems(this, oFinalFilter)
         },
         onNavBack: function () {
             var oHistory = sap.ui.core.routing.History.getInstance();
@@ -1006,7 +1006,7 @@ sap.ui.define([
         onChangeRAPOItemQuantity: function (oEvent) {
             let oInput = oEvent.getSource();
             let value = oInput.getValue();
-            let binding = oInput.getBindingContext("AsnItemsModel").getObject();
+            let binding = oInput.getBindingContext("AsnSaItemsModel").getObject();
             if (value === "") {
                 binding.AvailableQuantity = value; //update entered Qty into available Quantity field
                 let amountInput = this.getView().byId("idRAPO_Amount");
@@ -1044,7 +1044,7 @@ sap.ui.define([
 
         calculateMaxAmoutValue_RAPO: function (enteredQty) {
             let poTable = this.getView().byId("idTable_RAPO");
-            let poTableData = poTable.getModel("AsnItemsModel").getProperty("/Results");
+            let poTableData = poTable.getModel("AsnSaItemsModel").getProperty("/Results");
             this.maxRAPOAmountAllowed = 0;
             if (this.selected_Po_Scheduling_Type === "PurchaseOrder") {
                 let maxAmountForItem = 0;
@@ -1608,7 +1608,7 @@ sap.ui.define([
 
             let isQuantityEntered = true;
             var itemData = [];
-            this.getView().byId("idTable_RAPO").getModel("AsnItemsModel").getProperty("/Results").filter(item => {
+            this.getView().byId("idTable_RAPO").getModel("AsnSaItemsModel").getProperty("/Results").filter(item => {
                 if (item.AvailableQuantity === "" || item.EnteredQuantity === "") {
                     isQuantityEntered = false;
                 }
@@ -1772,15 +1772,15 @@ sap.ui.define([
         clearUIFields: function () {
             let oView = this.getView();
             //oView.byId("idDocInvNo").setValue();
-            oView.byId("idDropdownPlant").setSelectedKey();
-            oView.byId("idDropdownPlant").setValue();
+            // oView.byId("idDropdownPlant").setSelectedKey();
+            // oView.byId("idDropdownPlant").setValue();
             oView.byId("idRAPO_Date").setValue();
             oView.byId("idRAPO_Time").setValue();
-            let sInwardtype = oView.byId("idDropdownInwardType").getSelectedKey();
-            if (sInwardtype === "ReceiptAgainstPO") {
+            // let sInwardtype = oView.byId("idDropdownInwardType").getSelectedKey();
+            // if (sInwardtype === "ReceiptAgainstPO") {
                 oView.byId("idDocInvNo").setValue();
-                oView.byId("idDropdownInwardType").setSelectedKey();
-                oView.byId("idDropdownInwardType").setValue();
+                // oView.byId("idDropdownInwardType").setSelectedKey();
+                // oView.byId("idDropdownInwardType").setValue();
 
                 oView.byId("idRAPO_InvDate").setValue();
                 oView.byId("idRAPO_LR_Date").setValue();
@@ -1793,27 +1793,27 @@ sap.ui.define([
                 oView.byId("idRAPO_Trasporter").setValue();
                 let tModel = new sap.ui.model.json.JSONModel([]);
                 oView.byId("idTable_RAPO").setModel(tModel);
-            }
-            else if (sInwardtype === "ReceiptAsItIs") {
-                oView.byId("idDropdownInwardType").setSelectedKey();
-                oView.byId("idDropdownInwardType").setValue();
-                //oView.byId("idRAII_Date").setValue();
-                //oView.byId("idRAII_Time").setValue();
-                oView.byId("idRAII_InvDate").setValue();
-                oView.byId("idRAII_LR_Date").setValue();
-                oView.byId("idRAII_LR_No").setValue();
-                oView.byId("idRAII_Challan").setValue();
-                oView.byId("idRAII_Vendor").setValue();
-                oView.byId("idRAII_DocInvNo").setValue();
-                oView.byId("idRAII_EwayNo").setValue();
-                oView.byId("idRAII_Amount").setValue();
-                oView.byId("idRAII_VehicalNo").setValue();
-                oView.byId("idRAII_Trasporter").setValue();
-                let tModel = new sap.ui.model.json.JSONModel([]);
-                oView.byId("idTable_RAII").setModel(tModel);
-            }
-            oView.byId("idPanelRAPO").setVisible(false);
-            oView.byId("idPanelRAII").setVisible(false);
+            // }
+            // else if (sInwardtype === "ReceiptAsItIs") {
+            //     oView.byId("idDropdownInwardType").setSelectedKey();
+            //     oView.byId("idDropdownInwardType").setValue();
+            //     //oView.byId("idRAII_Date").setValue();
+            //     //oView.byId("idRAII_Time").setValue();
+            //     oView.byId("idRAII_InvDate").setValue();
+            //     oView.byId("idRAII_LR_Date").setValue();
+            //     oView.byId("idRAII_LR_No").setValue();
+            //     oView.byId("idRAII_Challan").setValue();
+            //     oView.byId("idRAII_Vendor").setValue();
+            //     oView.byId("idRAII_DocInvNo").setValue();
+            //     oView.byId("idRAII_EwayNo").setValue();
+            //     oView.byId("idRAII_Amount").setValue();
+            //     oView.byId("idRAII_VehicalNo").setValue();
+            //     oView.byId("idRAII_Trasporter").setValue();
+            //     let tModel = new sap.ui.model.json.JSONModel([]);
+            //     oView.byId("idTable_RAII").setModel(tModel);
+            // }
+            // oView.byId("idPanelRAPO").setVisible(false);
+            // oView.byId("idPanelRAII").setVisible(false);
             //oView.byId("idPanelChallan").setVisible(false);
         },
 

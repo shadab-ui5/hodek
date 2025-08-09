@@ -7,7 +7,6 @@ sap.ui.define([
     return Controller.extend("hodek.vendorportal.controller.Main", {
 
         onInit: function () {
-            
             this.oRouter = sap.ui.core.UIComponent.getRouterFor(this);
             this.oRouter.attachRouteMatched(this._onRouteMatched, this);
         },
