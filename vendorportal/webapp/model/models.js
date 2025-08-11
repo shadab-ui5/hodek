@@ -370,6 +370,58 @@ sap.ui.define([
                     });
                 })
             },
+            _loadAsn: function (_this, sQuery, iSkip, iTop) {
+                return new Promise((resolve, reject) => {
+                    let oModel = _this.getOwnerComponent().getModel("vendorModel");
+                    let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
+                    const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
+
+                    console.log("Unique Suppliers:", uniqueSupplier)
+                    // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
+                    let aFilters = [];
+                    if (sQuery) {
+                        let oSearch = new sap.ui.model.Filter({
+                            filters: [
+                                new sap.ui.model.Filter("AsnNo", "Contains", sQuery),
+                                new sap.ui.model.Filter("InvoiceNo", "Contains", sQuery),
+                                new sap.ui.model.Filter("Plant", "Contains", sQuery),
+                                new sap.ui.model.Filter("Vendor", "Contains", sQuery),
+                            ],
+                            and: false
+                        });
+                        aFilters.push(oSearch);
+                    } else {
+                        // const oOrFilter = new sap.ui.model.Filter(
+                        //     uniqueSupplier.map(group =>
+                        //         new sap.ui.model.Filter("Vendor", sap.ui.model.FilterOperator.EQ, group)
+                        //     ),
+                        //     false // OR
+                        // );
+                        // aFilters.push(oOrFilter);
+                    }
+
+                    oModel.read("/asnHdr", {
+                        filters: aFilters,
+                        urlParameters: {
+                            "$top": iTop,
+                            "$skip": iSkip
+                        },
+                        success: (oData) => {
+                            oData.results.sort((a, b) => {
+                                return Number(b.AsnNo) - Number(a.AsnNo);
+                            });
+                            let oModel = _this.getOwnerComponent().getModel("AsnHeaderModel");
+                            oModel.setProperty("/AsnData", oData.results);
+                            resolve(oData.results)
+
+                        },
+                        error: (err) => {
+                            sap.m.MessageToast.show("Error fetching Purchase Orders.");
+                            reject(err)
+                        }
+                    });
+                })
+            },
             _loadSchedulingAgre: function (_this, sQuery, iSkip, iTop) {
                 return new Promise((resolve, reject) => {
                     let oModel = _this.getOwnerComponent().getModel("vendorModel");

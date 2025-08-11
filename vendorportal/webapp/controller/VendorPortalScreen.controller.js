@@ -10,24 +10,6 @@ sap.ui.define([
 
     return Controller.extend("hodek.vendorportal.controller.VendorPortalScreen", {
         onInit: function () {
-            let dateFrom = UI5Date.getInstance(), // today's date
-                dateTo = UI5Date.getInstance(),
-                oModel = new JSONModel();
-
-            // dateFrom = start of current month
-            dateFrom.setUTCDate(1);
-
-            // dateTo = one month later - 1 day
-            dateTo = UI5Date.getInstance(dateFrom.getTime()); // clone start date
-            dateTo.setUTCMonth(dateTo.getUTCMonth() + 1); // move forward one month
-            dateTo.setUTCDate(0); // set to last day of previous month
-
-            oModel.setData({
-                start: dateFrom,
-                end: dateTo,
-            });
-
-            this.getView().setModel(oModel, "DateFormatModel");
             const oODataModel = this.getOwnerComponent().getModel("vendorModel");
             const oFilterModel = new sap.ui.model.json.JSONModel();
             const oTableModel = new sap.ui.model.json.JSONModel();
@@ -114,7 +96,7 @@ sap.ui.define([
         },
 
         formatter: Formatter,
-        onSearch: function (oEvent) {
+        onFilterGo: function (oEvent) {
             const oView = this.getView();
             const oModel = this.getOwnerComponent().getModel("vendorModel"); // OData model
             const oTableModel = this.getOwnerComponent().getModel("TableModelPO"); // Target model for results

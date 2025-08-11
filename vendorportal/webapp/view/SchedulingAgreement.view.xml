@@ -58,23 +58,9 @@
                     </fb:control>
                 </fb:FilterGroupItem>
                 <!-- Purchase Order Date -->
-                <fb:FilterGroupItem id="_IDGenFilterGroupItem10"  name="SA Creation Date" label="SA Creation Date" groupName="Group1" visibleInFilterBar="true">
+                <fb:FilterGroupItem id="_IDGenFilterGroupItem10"  name="CreationDate" label="Creation Date" groupName="Group1" visibleInFilterBar="true">
                     <fb:control>
-                        <DateRangeSelection id="idPoPurchDate" class="DRS1" value= "{
-                        'type': 'sap.ui.model.type.DateInterval',
-                        'formatOptions': {
-                            'pattern': 'yyyy-MM-dd'
-                        },
-                        'parts': [
-                            {
-                                'type': 'sap.ui.model.type.Date'
-                                
-                            },
-                            {
-                                'type': 'sap.ui.model.type.Date'
-                            }
-                        ]
-                    }" change="handleChange"/>
+                        <DateRangeSelection id="idPoPurchDate" class="DRS1" displayFormat="yyyy-MM-dd" change="handleChange"/>
                     </fb:control>
                 </fb:FilterGroupItem>
             </fb:filterGroupItems>
@@ -121,19 +107,15 @@
                 <Column id="_IDGenColumn201"  minScreenWidth="Tablet" demandPopin="true" hAlign="Center" visible="false">
                     <Text id="_IDGenText501"  text="Plant" />
                 </Column>
+                <Column id="_IDGenColumn202"  minScreenWidth="Tablet" demandPopin="true" hAlign="Center" visible="false">
+                    <Text id="_IDGenText502"  text="Purchasing Document Type Name" />
+                </Column>
 
             </columns>
             <items>
                 <ColumnListItem id="_IDGenColumnListItem3"  vAlign="Middle" type="Navigation">
                     <cells>
-                        <Text id="_IDGenText6"  text="{
-    parts: [
-      { path: 'TableModelSa>SchedulingAgreement' },
-      { path: 'TableModelSa>SchedulingAgreementText' }
-    ],
-    formatter: '.formatter.formatPurchaseOrderText'
-  }" />
-
+                        <Text id="_IDGenText6"  text="{TableModelSa>SchedulingAgreement}" />
                         <Text id="_IDGenText7"  text="{TableModelSa>SupplierName} ( {TableModelSa>Supplier} )" />
                         <Text id="_IDGenText38"  text="{path:'TableModelSa>ValidityStartDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
                         <Text id="_IDGenText444"  text="{path:'TableModelSa>ValidityEndDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
@@ -141,6 +123,7 @@
                         <Text id="_IDGenText41"  text="{TableModelSa>PaymentTermsDescription}({TableModelSa>PaymentTerms})" />
                         <Text id="_IDGenText39"  text="{TableModelSa>SupplierRespSalesPersonName}" />
                         <Text id="_IDGenText40"  text="{TableModelSa>PlantName}({TableModelSa>Plant})" />
+                        <Text id="_IDGenText401"  text="{TableModelSa>PurchasingDocumentTypeName}" />
                     </cells>
                 </ColumnListItem>
             </items>

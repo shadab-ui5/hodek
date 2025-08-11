@@ -12,6 +12,8 @@
 						<items>
 							<IconTabFilter id="_IDGenIconTabFilter1" text="Purchase Orders" key="RouteVendorPortal"/>
 							<IconTabFilter id="_IDGenIconTabFilter2" text="Scheduling Agreement" key="RouteSchedulingAgg" />
+							<IconTabFilter id="_IDGenIconTabFilter5"  text="ASN Reprint" key="RouteAsnReprint" />
+							<IconTabFilter id="_IDGenIconTabFilter6"  text="ASN Cancellation" key="RouteAsnCancel" />
 						</items>
 						<content>
 							<NavContainer id="Main__NavContainer" height="100%" width="100%"/>

@@ -16,11 +16,11 @@
                         <Title id="_IDGenTitle2" text="{RouteSaData>/SaHeader/SchedulingAgreement}" level="H1"/>
                     </f:heading>
                     <f:expandedContent>
-                        <Label id="_IDGenLabel" text="{=${RouteSaData>/SaHeader/SchedulingAgreementText}?${RouteSaData>/SaHeader/SchedulingAgreementText}:'NA'}"/>
+                        <Label id="_IDGenLabel" text="{=${RouteSaData>/SaHeader/PurchasingDocumentTypeName}?${RouteSaData>/SaHeader/PurchasingDocumentTypeName}:'NA'}"/>
 
                     </f:expandedContent>
                     <f:snappedContent>
-                        <Label id="_IDGenLabel2" text="{=${RouteSaData>/SaHeader/SchedulingAgreementText}?${RouteSaData>/SaHeader/SchedulingAgreementText}:'NA'}"/>
+                        <Label id="_IDGenLabel2" text="{=${RouteSaData>/SaHeader/PurchasingDocumentTypeName}?${RouteSaData>/SaHeader/PurchasingDocumentTypeName}:'NA'}"/>
 
                     </f:snappedContent>
                 </f:DynamicPageTitle>
@@ -33,11 +33,6 @@
                                 <Label id="_IDGenLabel3" class="labelDesin" design="Bold" text="Plant" />
                                 <!-- <Text id="idPoHeadPlant" class="sapUiTinyMarginBegin" text="{RouteSaData>/SaHeader/PlantName}"/> -->
                                 <Text id="_IDGenText42" emptyIndicatorMode="On" class="textDesin" text="{RouteSaData>/SaHeader/PlantName}({RouteSaData>/SaHeader/Plant})" />
-                            </VBox>
-                            <VBox id="_IDGenVBox1" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
-                                <Label id="_IDGenLabel4" class="labelDesin" design="Bold" text="SA No." />
-                                <!-- <Text id="idPoHeadPO" class="sapUiTinyMarginBegin" text="{RouteSaData>/SaHeader/PurchaseOrder}"/> -->
-                                <Text id="_IDGenText51" emptyIndicatorMode="On" class="textDesin" text="{RouteSaData>/SaHeader/SchedulingAgreement}" />
                             </VBox>
                             <VBox id="_IDGenVBox2" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel13" class="labelDesin" design="Bold" text="Payment Term" />

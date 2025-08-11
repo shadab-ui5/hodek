@@ -11,7 +11,7 @@ sap.ui.define([
     "sap/m/library",
     'sap/ui/core/library',
     "sap/ui/core/format/DateFormat"
-], (Controller, Models,QRCode, Formatter, Dialog, Button, MessageBox, MessageToast, Fragment, mobileLibrary, coreLibrary, DateFormat) => {
+], (Controller, Models, QRCode, Formatter, Dialog, Button, MessageBox, MessageToast, Fragment, mobileLibrary, coreLibrary, DateFormat) => {
     "use strict";
 
     return Controller.extend("hodek.vendorportal.controller.AsnSaCreation", {
@@ -1595,13 +1595,13 @@ sap.ui.define([
                 Lrdate = oDateFormat.format(oView.byId("idRAPO_LR_Date").getDateValue()),
                 EwayDate = oDateFormat.format(oView.byId("idRAPO_EWAY_Date").getDateValue()),
                 Ponumber = oView.byId("idRAPO_PO_Order").getValue(),
-                Vendor = this.selectedPOSchAggrVendor,
+                Vendor = oView.byId("idSupplier").getText(),
                 Ewayno = oView.byId("idRAPO_EwayNo").getValue(),
                 Amount = oView.byId("idRAPO_Amount").getValue(),
                 Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
                 purchaseOrder = oView.byId("idRAPO_PO_Order").getValue(),
                 Transporter = oView.byId("idRAPO_Trasporter").getValue();
-            if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === ""||EwayDate === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
+            if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || EwayDate === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
                 MessageToast.show("Fill all mandatory fields");
                 return;
             }
@@ -1638,7 +1638,7 @@ sap.ui.define([
                 "Lrnumber": Lrnumber,
                 "Vendor": Vendor,
                 "Ewayno": Ewayno,
-                "EwaybillDate":(EwayDate !== "" ? EwayDate : null),
+                "EwaybillDate": (EwayDate !== "" ? EwayDate : null),
                 "Amount": parseFloat(Amount).toFixed(2),
                 "Vehicleno": Vehicleno,
                 "Transporter": Transporter,
@@ -1778,21 +1778,21 @@ sap.ui.define([
             oView.byId("idRAPO_Time").setValue();
             // let sInwardtype = oView.byId("idDropdownInwardType").getSelectedKey();
             // if (sInwardtype === "ReceiptAgainstPO") {
-                oView.byId("idDocInvNo").setValue();
-                // oView.byId("idDropdownInwardType").setSelectedKey();
-                // oView.byId("idDropdownInwardType").setValue();
+            oView.byId("idDocInvNo").setValue();
+            // oView.byId("idDropdownInwardType").setSelectedKey();
+            // oView.byId("idDropdownInwardType").setValue();
 
-                oView.byId("idRAPO_InvDate").setValue();
-                oView.byId("idRAPO_LR_Date").setValue();
-                oView.byId("idRAPO_EWAY_Date").setValue();
-                oView.byId("idRAPO_LR_No").setValue();
-                oView.byId("idRAPO_PO_Order").setValue();
-                oView.byId("idRAPO_EwayNo").setValue();
-                oView.byId("idRAPO_Amount").setValue();
-                oView.byId("idRAPO_VehicalNo").setValue();
-                oView.byId("idRAPO_Trasporter").setValue();
-                let tModel = new sap.ui.model.json.JSONModel([]);
-                oView.byId("idTable_RAPO").setModel(tModel);
+            oView.byId("idRAPO_InvDate").setValue();
+            oView.byId("idRAPO_LR_Date").setValue();
+            oView.byId("idRAPO_EWAY_Date").setValue();
+            oView.byId("idRAPO_LR_No").setValue();
+            oView.byId("idRAPO_PO_Order").setValue();
+            oView.byId("idRAPO_EwayNo").setValue();
+            oView.byId("idRAPO_Amount").setValue();
+            oView.byId("idRAPO_VehicalNo").setValue();
+            oView.byId("idRAPO_Trasporter").setValue();
+            let tModel = new sap.ui.model.json.JSONModel([]);
+            oView.byId("idTable_RAPO").setModel(tModel);
             // }
             // else if (sInwardtype === "ReceiptAsItIs") {
             //     oView.byId("idDropdownInwardType").setSelectedKey();
@@ -2007,7 +2007,7 @@ sap.ui.define([
             }
             if (!this.sReprintQRDialog) {
                 let gateEntryNoInput = new sap.m.Input({
-                    id:'reprintAsnInput',
+                    id: 'reprintAsnInput',
                     maxLength: 20,
                     showValueHelp: true,
                     valueHelpRequest: function (oEvent) {

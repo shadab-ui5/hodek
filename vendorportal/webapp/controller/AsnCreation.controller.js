@@ -1595,7 +1595,7 @@ sap.ui.define([
                 Lrdate = oDateFormat.format(oView.byId("idRAPO_LR_Date").getDateValue()),
                 EwayDate = oDateFormat.format(oView.byId("idRAPO_EWAY_Date").getDateValue()),
                 Ponumber = oView.byId("idRAPO_PO_Order").getValue(),
-                Vendor = this.selectedPOSchAggrVendor,
+                Vendor =oView.byId("idSupplier").getText(),
                 Ewayno = oView.byId("idRAPO_EwayNo").getValue(),
                 Amount = oView.byId("idRAPO_Amount").getValue(),
                 Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),

@@ -132,6 +132,13 @@
           ]
         },
         {
+          "name": "RouteAsnReprint",
+          "pattern": "asn",
+          "target": [
+            "TargetAsnReprint"
+          ]
+        },
+        {
           "name": "RouteScheduleAgreeOrder",
           "pattern": "sano/{po}",
           "target": [
@@ -173,6 +180,15 @@
         "TargetPurchaseOrder": {
           "id": "PurchaseOrder",
           "name": "PurchaseOrder",
+          "viewType": "XML",
+          "viewLevel": 2,
+          "controlId": "Main__NavContainer",
+          "controlAggregation": "pages",
+          "clearControlAggregation": true
+        },
+        "TargetAsnReprint": {
+          "id": "ReprintAsn",
+          "name": "ReprintAsn",
           "viewType": "XML",
           "viewLevel": 2,
           "controlId": "Main__NavContainer",

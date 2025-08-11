@@ -7,7 +7,7 @@
     xmlns:svm="sap.ui.comp.smartvariants">
 
     <!-- <Page id="purchaseOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack"> -->
-        <fb:FilterBar id="filterbar" useToolbar="false" search=".onSearch" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
+        <fb:FilterBar id="filterbar" useToolbar="false" search=".onFilterGo" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
             <fb:filterGroupItems>
 
                 <!-- 🔍 Search Field -->
@@ -60,22 +60,7 @@
                 <!-- Purchase Order Date -->
                 <fb:FilterGroupItem id="_IDGenFilterGroupItem13" name="PurchaseOrderDate" label="Purchase Order Date" groupName="Group1" visibleInFilterBar="true">
                     <fb:control>
-                        <DateRangeSelection id="idPoPurchDate" class="DRS1" value= "{
-                        'type': 'sap.ui.model.type.DateInterval',
-                        'formatOptions': {
-                            'pattern': 'yyyy-MM-dd'
-                        },
-                        'parts': [
-                            {
-                                'type': 'sap.ui.model.type.Date',
-                                'path': 'DateFormatModel>/start'
-                            },
-                            {
-                                'type': 'sap.ui.model.type.Date',
-                                'path': 'DateFormatModel>/end'
-                            }
-                        ]
-                    }" change="handleChange"/>
+                        <DateRangeSelection id="idPoPurchDate" class="DRS1" displayFormat="yyyy-MM-dd"  change="handleChange"/>
                     </fb:control>
                 </fb:FilterGroupItem>
             </fb:filterGroupItems>

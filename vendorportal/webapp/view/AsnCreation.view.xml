@@ -12,8 +12,6 @@
         <f:title>
             <f:DynamicPageTitle id="_IDGenDynamicPageTitle2">
                 <f:actions>
-                    <Button id="_IDGenButton7" text="Reprint ASN" press="onRePrintGateEntryQR"/>
-                    <Button id="_IDGenButton8" text="Cancel ASN" press="onCancelGateEntry"/>
                     <Button id="_IDGenButton9" type="Emphasized" text="Save" press="onSave" class="sapUiSmallMarginEnd"/>
                 </f:actions>
                 <f:heading>
@@ -38,8 +36,6 @@
                             <Label id="_IDGenLabel5" text="Doc./Inv. No" required="true"/>
                             <Input id="idDocInvNo" value="" change="onChangeDocInvNo" maxLength="16" width="75%"/>
                         </VBox>
-
-
                         <VBox id="_IDGenVBox20" width="20%">
                             <Label id="_IDGenLabel26" text="Plant" required="true"/>
                             <Input id="idDropdownPlant" value="{RoutePoData>/PoHeader/Plant}" enabled="false" width="75%"/>
@@ -93,6 +89,10 @@
                         <VBox id="_IDGenVBox11" width="20%">
                             <Label id="_IDGenLabel11" text="LR Date"/>
                             <DatePicker id="idRAPO_LR_Date" width="75%" placeholder="Select Date" change="handleChange_RAPO_LRDate" displayFormat="yyyy-MM-dd" enabled="true" class="sapUiSmallMarginBottom"/>
+                        </VBox>
+                        <VBox id="_IDGenVBox111" width="20%" visible="false">
+                            <Label id="_IDGenLabel111" text="Supplier"/>
+                            <Text id="idSupplier" text="{RoutePoData>/PoHeader/Supplier}" class="sapUiSmallMarginBottom"/>
                         </VBox>
                     </HBox>
                     

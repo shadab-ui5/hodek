@@ -1,0 +1,97 @@
+<mvc:View controllerName="hodek.vendorportal.controller.ReprintAsn"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:svm="sap.ui.comp.smartvariants">
+
+    <!-- <Page id="purchaseOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack"> -->
+        <fb:FilterBar id="filterbar" useToolbar="false" search=".onSearch" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
+            <fb:filterGroupItems>
+
+                <!-- 🔍 Search Field -->
+                <fb:FilterGroupItem id="_IDGenFilterGroupItem8" name="Search" label="Search" groupName="Group1" visibleInFilterBar="true">
+                    <fb:control>
+                        <SearchField id="searchField" width="90%" class="" placeholder="Search..." liveChange=".onLiveChange" search=".onSearchAsn" />
+
+                    </fb:control>
+                </fb:FilterGroupItem>
+
+                <!-- Supplier -->
+                <!-- <fb:FilterGroupItem id="_IDGenFilterGroupItem9" name="Supplier" label="Supplier" groupName="Group1" visibleInFilterBar="true">
+                    <fb:control>
+                        <MultiInput id="idPoSupplier" valueHelpOnly="true" showValueHelp="true" showSuggestion="false" valueHelpRequest=".onSupplierValueHelp" width="100%" placeholder="Select Supplier(s)" />
+                    </fb:control>
+                </fb:FilterGroupItem> -->
+
+                <!-- Purchase Order -->
+                <!-- <fb:FilterGroupItem id="_IDGenFilterGroupItem7" name="PurchaseOrder" label="Purchase Order" groupName="Group1" visibleInFilterBar="true">
+                    <fb:control>
+                        <MultiInput id="idAsnNumber" valueHelpOnly="true" showValueHelp="true" showSuggestion="false" valueHelpRequest=".onAsnValueHelp" width="100%" placeholder="Select ASN No(s)" />
+                    </fb:control>
+                </fb:FilterGroupItem> -->
+            </fb:filterGroupItems>
+
+        </fb:FilterBar>
+        <Table id="idAsnTable" alternateRowColors="true" growing="true" mode="SingleSelectLeft" multiSelectMode="ClearAll" growingScrollToLoad="true" growingThreshold="20" updateStarted="onUpdateStartPoHeaderTable" items="{AsnHeaderModel>/AsnData}" itemPress="onLineItemPress" sticky="ColumnHeaders,HeaderToolbar">
+            <headerToolbar>
+                <OverflowToolbar id="_IDGenOverflowToolbar1">
+                    <Title id="_IDGenTitle3" text="Purchase Orders" level="H2"/>
+                    <ToolbarSpacer id="_IDGenToolbarSpacer"/>
+                    <Button id="_IDGenButton" tooltip="Sort" icon="sap-icon://sort" press="handleSortButtonPressed"/>
+                    <Button id="_IDGenButton1" tooltip="Filter" icon="sap-icon://filter" press="handleFilterButtonPressed"/>
+                    <Button id="_IDGenButton2" tooltip="Group" icon="sap-icon://group-2" press="handleGroupButtonPressed"/>
+                    <ToggleButton id="_IDGenToggleButton" icon="sap-icon://menu" tooltip="Enable Custom Context Menu" press="onToggleContextMenu" />
+                </OverflowToolbar>
+            </headerToolbar>
+            <infoToolbar>
+                <OverflowToolbar id="vsdFilterBar" visible="false">
+                    <Text id="vsdFilterLabel" />
+                </OverflowToolbar>
+            </infoToolbar>
+            <columns>
+                <Column id="purOrder" headerMenu="columnHeaderMenu" >
+                    <Text id="_IDGenText" text="ASN No." />
+                </Column>
+                <Column id="_IDGenColumn" minScreenWidth="Tablet" demandPopin="true">
+                    <Text id="_IDGenText2" text="Invoice" />
+                </Column>
+                <Column id="_IDGenColumn1" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                    <Text id="_IDGenText3" text="Invoice Date" />
+                </Column>
+                
+                <Column id="_IDGenColumn32" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                    <Text id="_IDGenText122" text="Plant" />
+                </Column>
+                <Column id="_IDGenColumn22" minScreenWidth="Tablet" demandPopin="true" hAlign="Center" >
+                    <Text id="_IDGenText42" text="Amount" />
+                </Column>
+                <Column id="_IDGenColumnn32" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                    <Text id="_IDGenTextt122" text="System Date" />
+                </Column>
+                <Column id="_IDGenColumnn31" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                    <Text id="_IDGenTextt121" text="System Time" />
+                </Column>
+
+            </columns>
+            <items>
+                <ColumnListItem id="_IDGenColumnListItem12" vAlign="Middle">
+                    <cells>
+                        <Text id="_IDGenText51" text="{AsnHeaderModel>AsnNo}" />
+
+                        <Text id="_IDGenText81" text="{AsnHeaderModel>InvoiceNo}" />
+                        <Text id="_IDGenText922" text="{path:'AsnHeaderModel>InvoiceDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
+                        <Text id="_IDGenText132" text="{AsnHeaderModel>Plant}" />
+                        <Text id="_IDGenText101" text="{AsnHeaderModel>Amount}" />
+                        <Text id="_IDGenText923" text="{path:'AsnHeaderModel>SystemDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
+                        <Text id="_IDGenText91" text="{path:'AsnHeaderModel>SystemTime',formatter:'.formatter.formatHours'}" />
+                       
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    <!-- </Page> -->
+    
+
+</mvc:View>

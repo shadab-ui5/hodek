@@ -2,36 +2,28 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "hodek/vendorportal/model/models",
     "hodek/vendorportal/utils/Formatter",
+    "sap/ui/core/format/DateFormat",
     "sap/ui/core/date/UI5Date",
     'sap/ui/model/json/JSONModel'
-], (Controller, Models, Formatter, UI5Date, JSONModel) => {
+], (Controller, Models, Formatter, DateFormat, UI5Date, JSONModel) => {
     "use strict";
 
-    return Controller.extend("hodek.vendorportal.controller.SchedulingAgreement", {
+    return Controller.extend("hodek.vendorportal.controller.ReprintAsn", {
         onInit: function () {
-            const oODataModel = this.getOwnerComponent().getModel("vendorModel");
-            const oFilterModel = new sap.ui.model.json.JSONModel();
-            const oTableModel = new sap.ui.model.json.JSONModel();
-            const oRouteData = new sap.ui.model.json.JSONModel();
-            const oPlantModelVh = new sap.ui.model.json.JSONModel();
-            const oCompanyModel = new sap.ui.model.json.JSONModel();
-
-            this.getView().setModel(oCompanyModel, "CompanyCodeSaModel");
-            this.getView().setModel(oPlantModelVh, "PlantModelVh");
-            this.getOwnerComponent().setModel(oTableModel, "TableModelSa");
-            this.getOwnerComponent().setModel(oRouteData, "RouteSaData");
-            this.getView().setModel(oFilterModel, "FilterModel");
-
+            const oRouter = this.getOwnerComponent().getRouter();
+            oRouter.getRoute("RouteScheduleAgreeOrder").attachPatternMatched(this._onRouteMatched, this);
             const oBusyDialog = new sap.m.BusyDialog({ text: "Loading data..." });
             oBusyDialog.open();
 
             let that = this;
-            const oPoModelVh = new sap.ui.model.json.JSONModel();
+            const oAsnModelVh = new sap.ui.model.json.JSONModel();
             const oSupplierVHModel = new sap.ui.model.json.JSONModel([]);
             const oPgVHModel = new sap.ui.model.json.JSONModel([]);
+            const oAsnHeaderModel = new sap.ui.model.json.JSONModel([]);
             this.getOwnerComponent().setModel(oSupplierVHModel, "SupplierVHModel");
+            this.getOwnerComponent().setModel(oAsnHeaderModel, "AsnHeaderModel");
             this.getOwnerComponent().setModel(oPgVHModel, "PgVHModel");
-            this.getOwnerComponent().setModel(oPoModelVh, "SaModelVh");
+            this.getOwnerComponent().setModel(oAsnModelVh, "AsnModelVh");
             if (sap.ushell && sap.ushell.Container) {
                 sap.ushell.Container.getServiceAsync("UserInfo").then(function (UserInfo) {
                     let loginUser = UserInfo.getId();
@@ -64,28 +56,20 @@ sap.ui.define([
             }
 
         },
+        _onRouteMatched: function (oEvent) {
+            const oTable = this.byId("idAsnTable");
+            oTable.setBusy(true); // Show busy indicator
+            const oODataModel = this.getOwnerComponent().getModel("vendorModel");
+            // Assuming the model name is "SaItemModel"
+            const oSaItemModel = this.getOwnerComponent().getModel("AsnHeaderModel");
+            const oBusyDialog = new sap.m.BusyDialog({ text: "Loading data..." });
+            this.loadPurchaseOrderFilter(oBusyDialog);
+            // Use sPOId to filter model or fetch data
+        },
         loadPurchaseOrderFilter: function (oBusyDialog) {
             // Load PO data and build company code model
             let that = this;
-            Models._loadSchedulingAgre(this, "", 0, 4999).then((result) => {
-                const uniqueCompanies = [...new Map(
-                    result
-                        .filter(item => item.CompanyCode)
-                        .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode, CompanyCodeName: item.CompanyCodeName }])
-                ).values()] || [];
-
-                that.getView().getModel("CompanyCodeSaModel").setData(uniqueCompanies);
-                that.getView().byId("idSaCompanyCode")?.getBinding("items")?.refresh();
-
-                console.log("Company codes loaded:", that.getView().getModel("CompanyCodeSaModel").getData());
-
-                // ✅ Load dependent filters AFTER company codes are set
-                const aCompanyCodes = this.getView().getModel("CompanyCodeSaModel")?.getData();
-
-                // Example: preselect first company, or filter something else
-                if (aCompanyCodes?.length === 1) {
-                    this.getView().byId("idSaCompanyCode").setSelectedKey(aCompanyCodes[0].CompanyCode);
-                }
+            Models._loadAsn(this, "", 0, 4999).then((result) => {
 
                 oBusyDialog.close();
             }).catch((oError) => {
@@ -98,20 +82,20 @@ sap.ui.define([
         onSearch: function (oEvent) {
             const oView = this.getView();
             const oModel = this.getOwnerComponent().getModel("vendorModel"); // OData model
-            const oTableModel = this.getOwnerComponent().getModel("TableModelSa"); // Target model for results
+            const oTableModel = this.getOwnerComponent().getModel("TableModelPO"); // Target model for results
             const oFilterModel = this.getOwnerComponent().getModel("FilterModel");
-            Models.searchSaHeader(this, oView, oModel, oTableModel)
+            Models.searchPoHeader(this, oView, oModel, oTableModel)
 
         },
         onLineItemPress: function (oEvent) {
             const oSelectedItem = oEvent.getParameter("listItem"); // or getSource()
-            const oContext = oSelectedItem.getBindingContext("TableModelSa");
+            const oContext = oSelectedItem.getBindingContext("TableModelPO");
             const oData = oContext.getObject();
-            this.getOwnerComponent().getModel("RouteSaData").setProperty("/SaHeader", oData);
+            this.getOwnerComponent().getModel("RoutePoData").setProperty("/PoHeader", oData);
             // Example: Navigate to another route with PurchaseOrder as parameter
             const oRouter = this.getOwnerComponent().getRouter();
-            oRouter.navTo("RouteScheduleAgreeOrder", {
-                po: oData.SchedulingAgreement // pass any key you need
+            oRouter.navTo("RoutePurchaseOrder", {
+                po: oData.PurchaseOrder // pass any key you need
             });
 
             // OR: If opening a dialog or using in-place display:
@@ -182,25 +166,25 @@ sap.ui.define([
                 });
             }
         },
-        onPurchaseOrderValueHelp: function () {
+        onAsnValueHelp: function () {
             let oView = this.getView();
 
             if (!this._oPoDialog) {
-                this._oPoDialog = sap.ui.xmlfragment("hodek.vendorportal.fragments.SchedulingAgreeValueHelp", this);
+                this._oPoDialog = sap.ui.xmlfragment("hodek.vendorportal.fragments.AsnValueHelp", this);
                 oView.addDependent(this._oPoDialog);
             }
             this._oPoDialog.open();
 
         },
 
-        onPurchaseOrderSearch: function (oEvent) {
+        onAsnSearch: function (oEvent) {
             let sQuery = oEvent.getParameter("value")?.trim().toLowerCase();
             this._poSearchQuery = sQuery;
             this._poSkip = 0;
             this._poHasMore = true;
 
-            const oModel = this.getView().getModel("SaModelVh");
-            const aAllPo = oModel.getProperty("/PurchaseOrders") || [];
+            const oModel = this.getView().getModel("AsnModelVh");
+            const aAllPo = oModel.getProperty("/AsnNumbers") || [];
 
             // Filter existing local data
             const aFilteredPo = aAllPo.filter(item =>
@@ -211,11 +195,11 @@ sap.ui.define([
 
             if (aFilteredPo.length > 0) {
                 // Use filtered data from local cache
-                this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["Plant", "CompanyCode", "PurchasingGroup", "Supplier", "PurchaseOrder"]);
+                this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["AsnNo", "Plant", "InvoiceNo"]);
 
             } else {
                 this._oPoDialog.setBusy(true);
-                Models._loadSchedulingAgre(this, sQuery, 0, 2000)
+                Models._loadAsn(this, sQuery, 0, 2000)
                     .then(() => {
                         this._oPoDialog.setBusy(false); // ✅ Stop busy after success
                     })
@@ -225,7 +209,7 @@ sap.ui.define([
                     });
             }
         },
-        onPurchaseOrderConfirm: function (oEvent) {
+        onAsnConfirm: function (oEvent) {
             let aSelectedContexts = oEvent.getParameter("selectedContexts");
             let oMultiInput = this.byId("idPoNumber");
             let oInputSupplier = this.byId("idPoSupplier");
@@ -240,8 +224,8 @@ sap.ui.define([
                 aSelectedContexts.forEach(function (oContext) {
                     let oData = oContext.getObject();
                     oMultiInput.addToken(new sap.m.Token({
-                        key: oData.SchedulingAgreement,
-                        text: oData.SchedulingAgreement
+                        key: oData.PurchaseOrder,
+                        text: oData.PurchaseOrder
                     }));
                     oInputSupplier.addToken(new sap.m.Token({
                         key: oData.Supplier,
@@ -390,31 +374,28 @@ sap.ui.define([
 
             oBinding.filter([oCombinedFilter]);
         },
-        onLiveChangeSa: function (oEvent) {
+        onLiveChange: function (oEvent) {
             var sQuery = oEvent.getParameter("newValue");
-            this._applySearchFilterSa(sQuery);
+            this._applySearchFilter(sQuery);
         },
 
-        onSearchSa: function (oEvent) {
+        onSearchAsn: function (oEvent) {
             var sQuery = oEvent.getParameter("query");
-            this._applySearchFilterSa(sQuery);
+            this._applySearchFilter(sQuery);
         },
 
-        _applySearchFilterSa: function (sQuery) {
-            var oTable = this.byId("idSaTable");
+        _applySearchFilter: function (sQuery) {
+            var oTable = this.byId("idProductsTable");
             var oBinding = oTable.getBinding("items");
 
             if (sQuery && sQuery.trim() !== "") {
+                // Build OR filter for all searchable properties
                 var aFilters = [
-                    new sap.ui.model.Filter("SchedulingAgreement", sap.ui.model.FilterOperator.Contains, sQuery),
-                    new sap.ui.model.Filter("SchedulingAgreementText", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("PurchaseOrder", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("purchaseOrderText", sap.ui.model.FilterOperator.Contains, sQuery),
                     new sap.ui.model.Filter("SupplierName", sap.ui.model.FilterOperator.Contains, sQuery),
                     new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.Contains, sQuery),
-                    // new sap.ui.model.Filter("ValidityStartDate", sap.ui.model.FilterOperator.Contains, sQuery),
-                    // new sap.ui.model.Filter("ValidityEndDate", sap.ui.model.FilterOperator.Contains, sQuery),
-                    // new sap.ui.model.Filter("CreationDate", sap.ui.model.FilterOperator.Contains, sQuery),
-                    // new sap.ui.model.Filter("PaymentTermsDescription", sap.ui.model.FilterOperator.Contains, sQuery),
-                    new sap.ui.model.Filter("PaymentTerms", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.Contains, sQuery),
                     new sap.ui.model.Filter("SupplierRespSalesPersonName", sap.ui.model.FilterOperator.Contains, sQuery),
                     // new sap.ui.model.Filter("PlantName", sap.ui.model.FilterOperator.Contains, sQuery),
                     // new sap.ui.model.Filter("Plant", sap.ui.model.FilterOperator.Contains, sQuery)
@@ -422,31 +403,16 @@ sap.ui.define([
 
                 var oFilter = new sap.ui.model.Filter({
                     filters: aFilters,
-                    and: false // OR search across all fields
+                    and: false // OR across all fields
                 });
 
+                // Apply search as "Application" filter so it works with other filters
                 oBinding.filter([oFilter], "Application");
             } else {
-                oBinding.filter([], "Application"); // Clear search
+                // Clear only the search filter
+                oBinding.filter([], "Application");
             }
         },
-        // handleChange: function (oEvent) {
-        // 	var sFrom = oEvent.getParameter("from"),
-        // 		sTo = oEvent.getParameter("to"),
-        // 		bValid = oEvent.getParameter("valid"),
-        // 		oEventSource = oEvent.getSource(),
-        // 		oText = this.byId("TextEvent");
-
-        // 	this._iEvent++;
-
-        // 	oText.setText("Id: " + oEventSource.getId() + "\nFrom: " + sFrom + "\nTo: " + sTo);
-
-        // 	if (bValid) {
-        // 		oEventSource.setValueState(ValueState.None);
-        // 	} else {
-        // 		oEventSource.setValueState(ValueState.Error);
-        // 	}
-        // }
 
 
 
