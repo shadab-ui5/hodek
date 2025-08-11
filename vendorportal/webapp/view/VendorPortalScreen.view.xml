@@ -6,7 +6,7 @@
     xmlns:f="sap.f"
     xmlns:svm="sap.ui.comp.smartvariants">
 
-    <Page id="purchaseOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack">
+    <!-- <Page id="purchaseOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack"> -->
         <fb:FilterBar id="filterbar" useToolbar="false" search=".onSearch" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
             <fb:filterGroupItems>
 
@@ -63,16 +63,16 @@
                         <DateRangeSelection id="idPoPurchDate" class="DRS1" value= "{
                         'type': 'sap.ui.model.type.DateInterval',
                         'formatOptions': {
-                            'pattern': 'yyyy/MM/dd'
+                            'pattern': 'yyyy-MM-dd'
                         },
                         'parts': [
                             {
                                 'type': 'sap.ui.model.type.Date',
-                                'path': '/start'
+                                'path': 'DateFormatModel>/start'
                             },
                             {
                                 'type': 'sap.ui.model.type.Date',
-                                'path': '/end'
+                                'path': 'DateFormatModel>/end'
                             }
                         ]
                     }" change="handleChange"/>
@@ -138,7 +138,7 @@
                 </ColumnListItem>
             </items>
         </Table>
-    </Page>
+    <!-- </Page> -->
     
 
 </mvc:View>

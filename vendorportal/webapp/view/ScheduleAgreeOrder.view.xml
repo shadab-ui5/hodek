@@ -5,7 +5,7 @@
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:svm="sap.ui.comp.smartvariants">
-    <Page id="ScheduleAgreeOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="true" navButtonPress="onNavBack">
+    <!-- <Page id="ScheduleAgreeOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="true" navButtonPress="onNavBack"> -->
         <f:DynamicPage id="_IDGenDynamicPage1" headerExpanded="{/headerExpanded}">
             <f:title>
                 <f:DynamicPageTitle id="_IDGenDynamicPageTitle">
@@ -42,7 +42,7 @@
                             <VBox id="_IDGenVBox2" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel13" class="labelDesin" design="Bold" text="Payment Term" />
                                 <!-- <Text id="idPoHeadSupplier" class="sapUiTinyMarginBegin" text="{RouteSaData>/SaHeader/Supplier}"/> -->
-                                <Text id="_IDGenText52" emptyIndicatorMode="On" class="textDesin" text="{RouteSaData>/SaHeader/PaymentTerms}" />
+                                <Text id="_IDGenText52" emptyIndicatorMode="On" class="textDesin" text="{RouteSaData>/SaHeader/PaymentTermsDescription}({RouteSaData>/SaHeader/PaymentTerms})" />
                             </VBox>
                             <VBox id="_IDGenVBox3" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel27" class="labelDesin" design="Bold" text="Validity End Date" />
@@ -87,7 +87,7 @@
                             <Text id="_IDGenText58" text="Plant" />
                         </Column>
                         <Column id="_IDGenColumn24">
-                            <Text id="_IDGenText59" text="Item Code" />
+                            <Text id="_IDGenText59" text="Material" />
                         </Column>
                         <Column id="_IDGenColumn26">
                             <Text id="_IDGenText61" text="Scheduled Qty" />
@@ -105,7 +105,7 @@
                             <cells>
                                 <Text id="_IDGenText63" text="{SaItemModel>SchedulingAgreement}" />
                                 <Text id="_IDGenText64" text="{SaItemModel>SchedulingAgreementItem}" />
-                                <Text id="_IDGenText65" text="{SaItemModel>Plant}" />
+                                <Text id="_IDGenText65" text="{SaItemModel>PlantName}({SaItemModel>Plant})" />
                                 <Text id="_IDGenText66" text="{SaItemModel>ItemDescription}({SaItemModel>ItemCode})" />
                                 <!-- <Text id="_IDGenText67" text="{path: 'SaItemModel>DeliveryDate', formatter: '.formatter.formatDateToDDMMYYYY'}" /> -->
                                 <Text id="_IDGenText68" text="{SaItemModel>ScheduleQty} {SaItemModel>UOM}" />
@@ -117,5 +117,5 @@
                 </Table>
             </f:content>
         </f:DynamicPage>
-    </Page>
+    <!-- </Page> -->
 </mvc:View>

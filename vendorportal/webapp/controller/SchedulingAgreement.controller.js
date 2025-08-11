@@ -1,12 +1,32 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "hodek/vendorportal/model/models",
-    "hodek/vendorportal/utils/Formatter"
-], (Controller, Models, Formatter) => {
+    "hodek/vendorportal/utils/Formatter",
+    "sap/ui/core/date/UI5Date",
+    'sap/ui/model/json/JSONModel'
+], (Controller, Models, Formatter, UI5Date, JSONModel) => {
     "use strict";
 
     return Controller.extend("hodek.vendorportal.controller.SchedulingAgreement", {
         onInit: function () {
+            let dateFrom = UI5Date.getInstance(), // today's date
+                dateTo = UI5Date.getInstance(),
+                oModel = new JSONModel();
+
+            // dateFrom = start of current month
+            dateFrom.setUTCDate(1);
+
+            // dateTo = one month later - 1 day
+            dateTo = UI5Date.getInstance(dateFrom.getTime()); // clone start date
+            dateTo.setUTCMonth(dateTo.getUTCMonth() + 1); // move forward one month
+            dateTo.setUTCDate(0); // set to last day of previous month
+
+            oModel.setData({
+                start: dateFrom,
+                end: dateTo,
+            });
+
+            this.getView().setModel(oModel, "DateFormatModel");
             const oODataModel = this.getOwnerComponent().getModel("vendorModel");
             const oFilterModel = new sap.ui.model.json.JSONModel();
             const oTableModel = new sap.ui.model.json.JSONModel();
@@ -69,8 +89,8 @@ sap.ui.define([
                 const uniqueCompanies = [...new Map(
                     result
                         .filter(item => item.CompanyCode)
-                        .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode,CompanyCodeName:item.CompanyCodeName}])
-                ).values()]||[];
+                        .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode, CompanyCodeName: item.CompanyCodeName }])
+                ).values()] || [];
 
                 that.getView().getModel("CompanyCodeSaModel").setData(uniqueCompanies);
                 that.getView().byId("idSaCompanyCode")?.getBinding("items")?.refresh();
@@ -227,10 +247,10 @@ sap.ui.define([
             let aSelectedContexts = oEvent.getParameter("selectedContexts");
             let oMultiInput = this.byId("idPoNumber");
             let oInputSupplier = this.byId("idPoSupplier");
-            // let oInputPurchaseGrp = this.byId("idPoPurchGroup");
+            let oInputPurchaseGrp = this.byId("idPoPurchGroup");
             let oInputPlant = this.byId("idFilterPlant");
             oInputSupplier.removeAllTokens();
-            // oInputPurchaseGrp.removeAllTokens();
+            oInputPurchaseGrp.removeAllTokens();
             oMultiInput.removeAllTokens();
             oInputPlant.removeAllTokens();
 
@@ -245,10 +265,10 @@ sap.ui.define([
                         key: oData.Supplier,
                         text: oData.Supplier
                     }));
-                    // oInputPurchaseGrp.addToken(new sap.m.Token({
-                    //     key: oData.PurchasingGroup,
-                    //     text: oData.PurchasingGroup
-                    // }));
+                    oInputPurchaseGrp.addToken(new sap.m.Token({
+                        key: oData.PurchasingGroup,
+                        text: oData.PurchasingGroup
+                    }));
                     oInputPlant.addToken(new sap.m.Token({
                         key: oData.Plant,
                         text: oData.Plant
@@ -387,7 +407,64 @@ sap.ui.define([
             });
 
             oBinding.filter([oCombinedFilter]);
-        }
+        },
+        onLiveChangeSa: function (oEvent) {
+            var sQuery = oEvent.getParameter("newValue");
+            this._applySearchFilterSa(sQuery);
+        },
+
+        onSearchSa: function (oEvent) {
+            var sQuery = oEvent.getParameter("query");
+            this._applySearchFilterSa(sQuery);
+        },
+
+        _applySearchFilterSa: function (sQuery) {
+            var oTable = this.byId("idSaTable");
+            var oBinding = oTable.getBinding("items");
+
+            if (sQuery && sQuery.trim() !== "") {
+                var aFilters = [
+                    new sap.ui.model.Filter("SchedulingAgreement", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("SchedulingAgreementText", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("SupplierName", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("ValidityStartDate", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("ValidityEndDate", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("CreationDate", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("PaymentTermsDescription", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("PaymentTerms", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("SupplierRespSalesPersonName", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("PlantName", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("Plant", sap.ui.model.FilterOperator.Contains, sQuery)
+                ];
+
+                var oFilter = new sap.ui.model.Filter({
+                    filters: aFilters,
+                    and: false // OR search across all fields
+                });
+
+                oBinding.filter([oFilter], "Application");
+            } else {
+                oBinding.filter([], "Application"); // Clear search
+            }
+        },
+        // handleChange: function (oEvent) {
+        // 	var sFrom = oEvent.getParameter("from"),
+        // 		sTo = oEvent.getParameter("to"),
+        // 		bValid = oEvent.getParameter("valid"),
+        // 		oEventSource = oEvent.getSource(),
+        // 		oText = this.byId("TextEvent");
+
+        // 	this._iEvent++;
+
+        // 	oText.setText("Id: " + oEventSource.getId() + "\nFrom: " + sFrom + "\nTo: " + sTo);
+
+        // 	if (bValid) {
+        // 		oEventSource.setValueState(ValueState.None);
+        // 	} else {
+        // 		oEventSource.setValueState(ValueState.Error);
+        // 	}
+        // }
 
 
 

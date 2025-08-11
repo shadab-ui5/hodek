@@ -11,7 +11,7 @@ sap.ui.define([
     "sap/m/library",
     'sap/ui/core/library',
     "sap/ui/core/format/DateFormat"
-], (Controller, Models,QRCode, Formatter, Dialog, Button, MessageBox, MessageToast, Fragment, mobileLibrary, coreLibrary, DateFormat) => {
+], (Controller, Models, QRCode, Formatter, Dialog, Button, MessageBox, MessageToast, Fragment, mobileLibrary, coreLibrary, DateFormat) => {
     "use strict";
 
     return Controller.extend("hodek.vendorportal.controller.AsnCreation", {
@@ -1601,7 +1601,7 @@ sap.ui.define([
                 Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
                 purchaseOrder = oView.byId("idRAPO_PO_Order").getValue(),
                 Transporter = oView.byId("idRAPO_Trasporter").getValue();
-            if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === ""||EwayDate === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
+            if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || EwayDate === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
                 MessageToast.show("Fill all mandatory fields");
                 return;
             }
@@ -1638,7 +1638,7 @@ sap.ui.define([
                 "Lrnumber": Lrnumber,
                 "Vendor": Vendor,
                 "Ewayno": Ewayno,
-                "EwaybillDate":(EwayDate !== "" ? EwayDate : null),
+                "EwaybillDate": (EwayDate !== "" ? EwayDate : null),
                 "Amount": parseFloat(Amount).toFixed(2),
                 "Vehicleno": Vehicleno,
                 "Transporter": Transporter,
@@ -2007,7 +2007,7 @@ sap.ui.define([
             }
             if (!this.sReprintQRDialog) {
                 let gateEntryNoInput = new sap.m.Input({
-                    id:'reprintAsnInput',
+                    id: 'reprintAsnInput',
                     maxLength: 20,
                     showValueHelp: true,
                     valueHelpRequest: function (oEvent) {
@@ -2153,7 +2153,130 @@ sap.ui.define([
 
             // Save the PDF to a file
             doc.save('QRCode.pdf');
-        }
+        },
+        onSearch: function (oEvent) {
+            // add filter for search
+            const aFilters = [];
+            const sQuery = oEvent.getSource().getValue();
+            if (sQuery && sQuery.length > 0) {
+                const filter = new Filter("fileName", FilterOperator.Contains, sQuery);
+                aFilters.push(filter);
+            }
+
+            // update list binding
+            const oTable = this.byId("table-uploadSet");
+            const oBinding = oTable.getBinding("items");
+            oBinding.filter(aFilters, "Application");
+        },
+        onPluginActivated: function (oEvent) {
+            this.oUploadPluginInstance = oEvent.getParameter("oPlugin");
+        },
+        getIconSrc: function (mediaType, thumbnailUrl) {
+            return UploadSetwithTable.getIconForFileType(mediaType, thumbnailUrl);
+        },
+        // Table row selection handler
+        onSelectionChange: function (oEvent) {
+            const oTable = oEvent.getSource();
+            const aSelectedItems = oTable?.getSelectedContexts();
+            const oDownloadBtn = this.byId("downloadSelectedButton");
+            const oEditUrlBtn = this.byId("editUrlButton");
+            const oRenameBtn = this.byId("renameButton");
+            const oRemoveDocumentBtn = this.byId("removeDocumentButton");
+
+            if (aSelectedItems.length > 0) {
+                oDownloadBtn.setEnabled(true);
+            } else {
+                oDownloadBtn.setEnabled(false);
+            }
+            if (aSelectedItems.length === 1) {
+                oEditUrlBtn.setEnabled(true);
+                oRenameBtn.setEnabled(true);
+                oRemoveDocumentBtn.setEnabled(true);
+            } else {
+                oRenameBtn.setEnabled(false);
+                oEditUrlBtn.setEnabled(false);
+                oRemoveDocumentBtn.setEnabled(false);
+            }
+        },
+        // Download files handler
+        onDownloadFiles: function (oEvent) {
+            const oContexts = this.byId("table-uploadSet").getSelectedContexts();
+            if (oContexts && oContexts.length) {
+                oContexts.forEach((oContext) => this.oUploadPluginInstance.download(oContext, true));
+            }
+        },
+        // UploadCompleted event handler
+        onUploadCompleted: function (oEvent) {
+            const oModel = this.byId("table-uploadSet").getModel("documents");
+            const iResponseStatus = oEvent.getParameter("status");
+
+            // check for upload is sucess
+            if (iResponseStatus === 201) {
+                oModel.refresh(true);
+                setTimeout(function () {
+                    MessageToast.show("Document Added");
+                }, 1000);
+            }
+            // This code block is only for demonstration purpose to simulate XHR requests, hence restoring the server to not fake the xhr requests.
+            this.oMockServer.restore();
+        },
+        onRemoveButtonPress: function (oEvent) {
+            var oTable = this.byId("table-uploadSet");
+            const aContexts = oTable.getSelectedContexts();
+            this.removeItem(aContexts[0]);
+        },
+        onRemoveHandler: function (oEvent) {
+            var oSource = oEvent.getSource();
+            const oContext = oSource.getBindingContext("documents");
+            this.removeItem(oContext);
+        },
+        removeItem: function (oContext) {
+            const oModel = this.getView().getModel("documents");
+            const oTable = this.byId("table-uploadSet");
+            MessageBox.warning(
+                "Are you sure you want to remove the document" + " " + oContext.getProperty("fileName") + " " + "?",
+                {
+                    icon: MessageBox.Icon.WARNING,
+                    actions: ["Remove", MessageBox.Action.CANCEL],
+                    emphasizedAction: "Remove",
+                    styleClass: "sapMUSTRemovePopoverContainer",
+                    initialFocus: MessageBox.Action.CANCEL,
+                    onClose: function (sAction) {
+                        if (sAction !== "Remove") {
+                            return;
+                        }
+                        var spath = oContext.getPath();
+                        if (spath.split("/")[2]) {
+                            var index = spath.split("/")[2];
+                            var data = oModel.getProperty("/items");
+                            data.splice(index, 1);
+                            oModel.refresh(true);
+                            if (oTable && oTable.removeSelections) {
+                                oTable.removeSelections();
+                            }
+                        }
+                    }
+                }
+            );
+        },
+        getFileCategories: function () {
+            return [
+                { categoryId: "Invoice", categoryText: "Invoice" },
+                { categoryId: "Specification", categoryText: "Specification" },
+                { categoryId: "Attachment", categoryText: "Attachment" },
+                { categoryId: "Legal Document", categoryText: "Legal Document" }
+            ];
+        },
+        getFileSizeWithUnits: function (iFileSize) {
+            return UploadSetwithTable.getFileSizeWithUnits(iFileSize);
+        },
+        openPreview: function (oEvent) {
+            const oSource = oEvent.getSource();
+            const oBindingContext = oSource.getBindingContext("documents");
+            if (oBindingContext && this.oUploadPluginInstance) {
+                this.oUploadPluginInstance.openFilePreview(oBindingContext);
+            }
+        },
 
     });
 });

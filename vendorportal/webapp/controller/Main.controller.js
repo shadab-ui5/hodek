@@ -41,7 +41,16 @@ sap.ui.define([
                 console.warn("Navigation failed.");
             }
         },
+        onNavBack: function () {
+            var oHistory = sap.ui.core.routing.History.getInstance();
+            var sPreviousHash = oHistory.getPreviousHash();
 
+            if (sPreviousHash !== undefined) {
+                window.history.go(-1);
+            } else {
+                this.getOwnerComponent().getRouter().navTo("RouteVendorPortal", {}, true); // replace with actual route
+            }
+        },
 
 
 

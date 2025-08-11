@@ -6,14 +6,14 @@
     xmlns:f="sap.f"
     xmlns:svm="sap.ui.comp.smartvariants">
 
-    <Page id="saOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack">
+    <!-- <Page id="saOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack"> -->
         <fb:FilterBar id="filterbarsa" useToolbar="false" search=".onSearch" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
             <fb:filterGroupItems>
 
                 <!-- 🔍 Search Field -->
                 <fb:FilterGroupItem id="_IDGenFilterGroupItem1"  name="Search" label="Search" groupName="Group1" visibleInFilterBar="true">
                     <fb:control>
-                        <SearchField id="searchField" width="90%" class="" placeholder="Search..." liveChange=".onLiveChange" search=".onSearch" />
+                        <SearchField id="searchField" width="90%" class="" placeholder="Search..." liveChange=".onLiveChangeSa" search=".onSearchSa" />
 
                     </fb:control>
                 </fb:FilterGroupItem>
@@ -36,11 +36,11 @@
                 </fb:FilterGroupItem>
 
                 <!-- Purchasing Group -->
-                <!-- <fb:FilterGroupItem id="_IDGenFilterGroupItem4"  name="PurchasingGroup" label="Purchasing Group" groupName="Group1" visibleInFilterBar="true">
+                <fb:FilterGroupItem id="_IDGenFilterGroupItem4"  name="PurchasingGroup" label="Purchasing Group" groupName="Group1" visibleInFilterBar="true">
                     <fb:control>
                         <MultiInput id="idPoPurchGroup" valueHelpOnly="true" showValueHelp="true" showSuggestion="false" valueHelpRequest=".onPurchasingGroupValueHelp" width="100%" placeholder="Select Purchasing Group(s)" />
                     </fb:control>
-                </fb:FilterGroupItem> -->
+                </fb:FilterGroupItem>
 
                 <!-- Company Code -->
                 <fb:FilterGroupItem id="_IDGenFilterGroupItem5"  name="CompanyCode" label="Company Code" groupName="Group1" visibleInFilterBar="true">
@@ -58,21 +58,20 @@
                     </fb:control>
                 </fb:FilterGroupItem>
                 <!-- Purchase Order Date -->
-                <fb:FilterGroupItem id="_IDGenFilterGroupItem10"  name="PurchaseOrderDate" label="Purchase Order Date" groupName="Group1" visibleInFilterBar="true">
+                <fb:FilterGroupItem id="_IDGenFilterGroupItem10"  name="SA Creation Date" label="SA Creation Date" groupName="Group1" visibleInFilterBar="true">
                     <fb:control>
                         <DateRangeSelection id="idPoPurchDate" class="DRS1" value= "{
                         'type': 'sap.ui.model.type.DateInterval',
                         'formatOptions': {
-                            'pattern': 'yyyy/MM/dd'
+                            'pattern': 'yyyy-MM-dd'
                         },
                         'parts': [
                             {
-                                'type': 'sap.ui.model.type.Date',
-                                'path': '/start'
+                                'type': 'sap.ui.model.type.Date'
+                                
                             },
                             {
-                                'type': 'sap.ui.model.type.Date',
-                                'path': '/end'
+                                'type': 'sap.ui.model.type.Date'
                             }
                         ]
                     }" change="handleChange"/>
@@ -138,15 +137,15 @@
                         <Text id="_IDGenText7"  text="{TableModelSa>SupplierName} ( {TableModelSa>Supplier} )" />
                         <Text id="_IDGenText38"  text="{path:'TableModelSa>ValidityStartDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
                         <Text id="_IDGenText444"  text="{path:'TableModelSa>ValidityEndDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
-                        <Text id="_IDGenText445"  text="Doc Date?" />
-                        <Text id="_IDGenText41"  text="{TableModelSa>PaymentTerms}" />
+                        <Text id="_IDGenText445"  text="{path:'TableModelSa>CreationDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
+                        <Text id="_IDGenText41"  text="{TableModelSa>PaymentTermsDescription}({TableModelSa>PaymentTerms})" />
                         <Text id="_IDGenText39"  text="{TableModelSa>SupplierRespSalesPersonName}" />
                         <Text id="_IDGenText40"  text="{TableModelSa>PlantName}({TableModelSa>Plant})" />
                     </cells>
                 </ColumnListItem>
             </items>
         </Table>
-    </Page>
+    <!-- </Page> -->
     
 
 </mvc:View>

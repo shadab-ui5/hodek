@@ -27,7 +27,7 @@ sap.ui.define([
                         ],
                         success: function (oData) {
                             console.log("Fetched supplier list:", oData.results);
-                            
+
                             resolve(oData);
                         },
                         error: function (oError) {
@@ -108,8 +108,11 @@ sap.ui.define([
 
             searchPoHeader: function (_this, oView, oModel, oTableModel) {
                 const aFilters = [];
-                let oDateFormat = DateFormat.getInstance({
+                let oStartDateFormat = DateFormat.getInstance({
                     pattern: "yyyy-MM-dd'T'00:00:00"
+                });
+                let oEndDateFormat = DateFormat.getInstance({
+                    pattern: "yyyy-MM-dd'T'23:59:59"
                 });
                 // Supplier (MultiComboBox)
                 const aSelectedSuppliers = oView.byId("idPoSupplier").getTokens().map(function (oToken) {
@@ -170,11 +173,18 @@ sap.ui.define([
                 if (oStartDate && oEndDate) {
                     // const fromDate = Formatter.formatDateToYyyyMmDd(oStartDate); // "2025-08-07"
                     // const toDate = Formatter.formatDateToYyyyMmDd(oEndDate);     // "2025-08-08"
-                    const fromDate = oDateFormat.format(new Date(oStartDate)); // "2025-08-07"
-                    const toDate = oDateFormat.format(new Date(oEndDate));     // "2025-08-08"
+                    const fromDate = oStartDateFormat.format(new Date(oStartDate)); // "2025-08-07"
+                    const toDate = oEndDateFormat.format(new Date(oEndDate));     // "2025-08-08"
 
-                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.GE, fromDate));
-                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.LE, toDate));
+                    const dateRangeFilter = new sap.ui.model.Filter({
+                        filters: [
+                            new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.GE, fromDate),
+                            new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.LE, toDate)
+                        ],
+                        and: true // ensures both conditions must match
+                    });
+
+                    aFilters.push(dateRangeFilter);
                 }
                 oView.setBusy(true);
                 // 🔍 Read data from OData service with filters
@@ -204,8 +214,11 @@ sap.ui.define([
             },
             searchSaHeader: function (_this, oView, oModel, oTableModel) {
                 const aFilters = [];
-                let oDateFormat = DateFormat.getInstance({
+                let oStartDateFormat = DateFormat.getInstance({
                     pattern: "yyyy-MM-dd'T'00:00:00"
+                });
+                let oEndDateFormat = DateFormat.getInstance({
+                    pattern: "yyyy-MM-dd'T'23:59:59"
                 });
                 // Supplier (MultiComboBox)
                 const aSelectedSuppliers = oView.byId("idPoSupplier").getTokens().map(function (oToken) {
@@ -214,18 +227,19 @@ sap.ui.define([
                 if (aSelectedSuppliers.length > 0) {
                     const supplierFilters = aSelectedSuppliers.map(s => new sap.ui.model.Filter("Supplier", "EQ", s));
                     aFilters.push(new sap.ui.model.Filter(supplierFilters, false)); // OR condition within supplier group
-                } 
-                // else {
-                //     let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
-                //     const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
-                //     const oOrFilter = new sap.ui.model.Filter(
-                //         uniqueSupplier.map(group =>
-                //             new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
-                //         ),
-                //         false // OR
-                //     );
-                //     aFilters.push(oOrFilter);
-                // }
+                }
+                else {
+                    let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
+                    const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
+                    uniqueSupplier.push('1100000'); /// removewhile deployment
+                    const oOrFilter = new sap.ui.model.Filter(
+                        uniqueSupplier.map(group =>
+                            new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
+                        ),
+                        false // OR
+                    );
+                    aFilters.push(oOrFilter);
+                }
 
                 // Purchase Order 
                 const sPurchaseOrder = oView.byId("idPoNumber").getTokens().map(function (oToken) {
@@ -237,13 +251,13 @@ sap.ui.define([
                 }
 
                 // Purchasing Group
-                // const sPurchGroup = oView.byId("idPoPurchGroup").getTokens().map(function (oToken) {
-                //     return oToken.getKey();
-                // });
-                // if (sPurchGroup.length > 0) {
-                //     const PurGroupFilters = sPurchGroup.map(s => new sap.ui.model.Filter("PurchasingGroup", "EQ", s));
-                //     aFilters.push(new sap.ui.model.Filter(PurGroupFilters, false)); // OR condition within supplier group
-                // }
+                const sPurchGroup = oView.byId("idPoPurchGroup").getTokens().map(function (oToken) {
+                    return oToken.getKey();
+                });
+                if (sPurchGroup.length > 0) {
+                    const PurGroupFilters = sPurchGroup.map(s => new sap.ui.model.Filter("PurchasingGroup", "EQ", s));
+                    aFilters.push(new sap.ui.model.Filter(PurGroupFilters, false)); // OR condition within supplier group
+                }
                 // Plant Group
                 const aPlantFilter = oView.byId("idFilterPlant").getTokens().map(function (oToken) {
                     return oToken.getKey();
@@ -267,11 +281,18 @@ sap.ui.define([
                 if (oStartDate && oEndDate) {
                     // const fromDate = Formatter.formatDateToYyyyMmDd(oStartDate); // "2025-08-07"
                     // const toDate = Formatter.formatDateToYyyyMmDd(oEndDate);     // "2025-08-08"
-                    const fromDate = oDateFormat.format(new Date(oStartDate)); // "2025-08-07"
-                    const toDate = oDateFormat.format(new Date(oEndDate));     // "2025-08-08"
+                    const fromDate = oStartDateFormat.format(new Date(oStartDate)); // "2025-08-07"
+                    const toDate = oEndDateFormat.format(new Date(oEndDate));     // "2025-08-08"
 
-                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.GE, fromDate));
-                    aFilters.push(new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.LE, toDate));
+                    const dateRangeFilter = new sap.ui.model.Filter({
+                        filters: [
+                            new sap.ui.model.Filter("CreationDate", sap.ui.model.FilterOperator.GE, fromDate),
+                            new sap.ui.model.Filter("CreationDate", sap.ui.model.FilterOperator.LE, toDate)
+                        ],
+                        and: true // ensures both conditions must match
+                    });
+
+                    aFilters.push(dateRangeFilter);
                 }
                 oView.setBusy(true);
                 // 🔍 Read data from OData service with filters
@@ -354,6 +375,7 @@ sap.ui.define([
                     let oModel = _this.getOwnerComponent().getModel("vendorModel");
                     let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
                     const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
+                    uniqueSupplier.push('1100000'); /// removewhile deployment
                     console.log("Unique Suppliers:", uniqueSupplier)
                     // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
                     let aFilters = [];
@@ -366,16 +388,16 @@ sap.ui.define([
                             and: false
                         });
                         aFilters.push(oSearch);
-                    } 
-                    // else {
-                    //     const oOrFilter = new sap.ui.model.Filter(
-                    //         uniqueSupplier.map(group =>
-                    //             new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
-                    //         ),
-                    //         false // OR
-                    //     );
-                    //     aFilters.push(oOrFilter);
-                    // }
+                    }
+                    else {
+                        const oOrFilter = new sap.ui.model.Filter(
+                            uniqueSupplier.map(group =>
+                                new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
+                            ),
+                            false // OR
+                        );
+                        aFilters.push(oOrFilter);
+                    }
 
                     oModel.read("/SaHdr", {
                         filters: aFilters,

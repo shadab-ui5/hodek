@@ -5,7 +5,7 @@
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:svm="sap.ui.comp.smartvariants">
-    <Page id="purchaseOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="true" navButtonPress="onNavBack">
+    <!-- <Page id="purchaseOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="true" navButtonPress="onNavBack"> -->
         <f:DynamicPage id="_IDGenDynamicPage2" headerExpanded="{/headerExpanded}">
             <f:title>
                 <f:DynamicPageTitle id="_IDGenDynamicPageTitle1">
@@ -116,5 +116,5 @@
                 </Table>
             </f:content>
         </f:DynamicPage>
-    </Page>
+    <!-- </Page> -->
 </mvc:View>

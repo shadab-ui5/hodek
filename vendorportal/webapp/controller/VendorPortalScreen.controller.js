@@ -1,12 +1,33 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "hodek/vendorportal/model/models",
-    "hodek/vendorportal/utils/Formatter"
-], (Controller, Models, Formatter) => {
+    "hodek/vendorportal/utils/Formatter",
+    "sap/ui/core/format/DateFormat",
+    "sap/ui/core/date/UI5Date",
+    'sap/ui/model/json/JSONModel'
+], (Controller, Models, Formatter, DateFormat, UI5Date, JSONModel) => {
     "use strict";
 
     return Controller.extend("hodek.vendorportal.controller.VendorPortalScreen", {
         onInit: function () {
+            let dateFrom = UI5Date.getInstance(), // today's date
+                dateTo = UI5Date.getInstance(),
+                oModel = new JSONModel();
+
+            // dateFrom = start of current month
+            dateFrom.setUTCDate(1);
+
+            // dateTo = one month later - 1 day
+            dateTo = UI5Date.getInstance(dateFrom.getTime()); // clone start date
+            dateTo.setUTCMonth(dateTo.getUTCMonth() + 1); // move forward one month
+            dateTo.setUTCDate(0); // set to last day of previous month
+
+            oModel.setData({
+                start: dateFrom,
+                end: dateTo,
+            });
+
+            this.getView().setModel(oModel, "DateFormatModel");
             const oODataModel = this.getOwnerComponent().getModel("vendorModel");
             const oFilterModel = new sap.ui.model.json.JSONModel();
             const oTableModel = new sap.ui.model.json.JSONModel();
@@ -69,7 +90,7 @@ sap.ui.define([
                 const uniqueCompanies = [...new Map(
                     result
                         .filter(item => item.CompanyCode)
-                        .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode,CompanyCodeName:item.CompanyCodeName}])
+                        .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode, CompanyCodeName: item.CompanyCodeName }])
                 ).values()];
 
                 that.getView().getModel("CompanyCodeModel").setData(uniqueCompanies);
@@ -387,7 +408,65 @@ sap.ui.define([
             });
 
             oBinding.filter([oCombinedFilter]);
-        }
+        },
+        onLiveChange: function (oEvent) {
+            var sQuery = oEvent.getParameter("newValue");
+            this._applySearchFilter(sQuery);
+        },
+
+        onSearch: function (oEvent) {
+            var sQuery = oEvent.getParameter("query");
+            this._applySearchFilter(sQuery);
+        },
+
+        _applySearchFilter: function (sQuery) {
+            var oTable = this.byId("idProductsTable");
+            var oBinding = oTable.getBinding("items");
+
+            if (sQuery && sQuery.trim() !== "") {
+                // Build OR filter for all searchable properties
+                var aFilters = [
+                    new sap.ui.model.Filter("PurchaseOrder", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("purchaseOrderText", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("SupplierName", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("PurchaseOrderDate", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("SupplierRespSalesPersonName", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("PlantName", sap.ui.model.FilterOperator.Contains, sQuery),
+                    // new sap.ui.model.Filter("Plant", sap.ui.model.FilterOperator.Contains, sQuery)
+                ];
+
+                var oFilter = new sap.ui.model.Filter({
+                    filters: aFilters,
+                    and: false // OR across all fields
+                });
+
+                // Apply search as "Application" filter so it works with other filters
+                oBinding.filter([oFilter], "Application");
+            } else {
+                // Clear only the search filter
+                oBinding.filter([], "Application");
+            }
+        },
+
+
+        // handleChange: function (oEvent) {
+        // 	var sFrom = oEvent.getParameter("from"),
+        // 		sTo = oEvent.getParameter("to"),
+        // 		bValid = oEvent.getParameter("valid"),
+        // 		oEventSource = oEvent.getSource(),
+        // 		oText = this.byId("TextEvent");
+
+        // 	this._iEvent++;
+
+        // 	oText.setText("Id: " + oEventSource.getId() + "\nFrom: " + sFrom + "\nTo: " + sTo);
+
+        // 	if (bValid) {
+        // 		oEventSource.setValueState(ValueState.None);
+        // 	} else {
+        // 		oEventSource.setValueState(ValueState.Error);
+        // 	}
+        // }
 
 
 

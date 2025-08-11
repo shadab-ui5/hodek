@@ -3,9 +3,10 @@
     xmlns="sap.m">
     <App id="_IDGenApp" >
         <pages >
-            <Page id="idMain__Page" title="Main page" class="MainPage" showHeader="false" >
+            <Page id="idMain__Page" title="Vendor Portal" class="MainPage" showHeader="true" showNavButton="true" navButtonPress="onNavBack">
 				
 				<content>
+					<Button id="_IDGenButton21" icon="sap-icon://nav-back" type="Transparent" press="onNavBack" ariaLabelledBy="editButtonLabel"/>
 					<IconTabBar id="idIconTabBarMain" applyContentPadding="false" selectedKey="RouteVendorPortal" expandable="false" headerBackgroundDesign="Solid" select="onSelectTabItem"
 						stretchContentHeight="true" class="ICTBCustom">
 						<items>

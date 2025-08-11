@@ -14,7 +14,7 @@
         <columns>
             <Column width="15%"><Text text="SA No"/></Column>
             <Column width="30%"><Text text="Supplier"/></Column>
-            <!-- <Column><Text text="Purchasing Group"/></Column> -->
+            <Column><Text text="Purchasing Group"/></Column>
             <Column><Text text="Payment Terms"/></Column>
             <Column><Text text="Plant"/></Column>
         </columns>
@@ -24,9 +24,9 @@
                 <cells>
                     <Text text="{parts:[{path:'SaModelVh>SchedulingAgreement'},{path:'SaModelVh>SchedulingAgreement'}],formatter:'.formatter.formatPurchaseOrderText'}" />
                     <Text text="{SaModelVh>SupplierName} ( {SaModelVh>Supplier} )" />
-                    <!-- <Text text="{SaModelVh>PurchasingGroup}" /> -->
-                    <Text text="{SaModelVh>PaymentTerms}" />
-                    <Text text="{SaModelVh>Plant}" />
+                    <Text text="{SaModelVh>PurchasingGroupName}({SaModelVh>PurchasingGroup})" />
+                    <Text text="{SaModelVh>PaymentTermsDescription}}({SaModelVh>PaymentTerms})" />
+                    <Text text="{SaModelVh>PlantName}({SaModelVh>Plant})" />
                 </cells>
             </ColumnListItem>
         </items>
