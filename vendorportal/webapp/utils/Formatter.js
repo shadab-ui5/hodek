@@ -21,7 +21,7 @@ sap.ui.define([], function () {
             return `${year}-${month}-${day}`; // e.g. "2025-08-07"
         },
         formatHours: function (time) {
-            let ms=time.ms;
+            let ms = time.ms;
             // Convert to hours, minutes, seconds
             let totalSeconds = Math.floor(ms / 1000);
             let hours = Math.floor(totalSeconds / 3600);
@@ -34,7 +34,6 @@ sap.ui.define([], function () {
             seconds = String(seconds).padStart(2, "0");
 
             let formattedTime = `${hours}:${minutes}:${seconds}`;
-            console.log(formattedTime); // "19:14:14"
             return formattedTime;
 
         }

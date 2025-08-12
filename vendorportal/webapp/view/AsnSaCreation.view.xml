@@ -134,6 +134,12 @@
                                     <Column id="_IDGenColumn7">
                                         <Text id="_IDGenText11" text="Quantity" />
                                     </Column>
+                                    <Column visible="false">
+                                        <Text text="TargetQuantity" />
+                                    </Column>
+                                    <Column visible="false">
+                                        <Text text="postedquantity" />
+                                    </Column>
                                 </columns>
                                 <items>
                                     <ColumnListItem id="_IDGenColumnListItem">
@@ -144,8 +150,9 @@
                                             <Text id="_IDGenText73" text="{AsnSaItemsModel>PurchasingDocumentItemText}"/>
                                             <!-- <Input id="_IDGenInput" value="{Material}" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="material_RAPOValueHelp"/> -->
                                             <Text id="_IDGenText74" text="{AsnSaItemsModel>OrderQuantityUnit}" />
-                                            <Input id="idInpRAPOItemQuantity" value="{EnteredQuantity}" change="onChangeRAPOItemQuantity" type="Number" />
-
+                                            <Input id="idInpRAPOItemQuantity" value="{AsnSaItemsModel>EnteredQuantity}" change="onChangeRAPOItemQuantity" type="Number" />
+                                            <Text text="{AsnSaItemsModel>TargetQuantity}" />
+                                            <Text text="{AsnSaItemsModel>postedquantity}" />
                                         </cells>
                                     </ColumnListItem>
                                 </items>

@@ -145,7 +145,7 @@ sap.ui.define([
             if (sPreviousHash !== undefined) {
                 window.history.go(-1);
             } else {
-                this.getOwnerComponent().getRouter().navTo("RoutePurchaseOrder", {
+                this.getOwnerComponent().getRouter().navTo("RouteScheduleAgreeOrder", {
                     po: this.purchaseOrder
                 }, true); // replace with actual route
             }
@@ -1005,40 +1005,30 @@ sap.ui.define([
 
         onChangeRAPOItemQuantity: function (oEvent) {
             let oInput = oEvent.getSource();
-            let value = oInput.getValue();
-            let binding = oInput.getBindingContext("AsnSaItemsModel").getObject();
-            if (value === "") {
-                binding.AvailableQuantity = value; //update entered Qty into available Quantity field
-                let amountInput = this.getView().byId("idRAPO_Amount");
-                amountInput.setValueState(sap.ui.core.ValueState.None);
-                return;
-            }
-            if (binding.Material === "") {
-                MessageToast.show("Select Material");
-                oInput.setValue();
-                binding.AvailableQuantity = ""; //update entered Qty into available Quantity field
-                let amountInput = this.getView().byId("idRAPO_Amount");
-                amountInput.setValueState(sap.ui.core.ValueState.None);
-                return;
-            }
-            let maxValue = parseFloat(binding.Quantity1) - parseFloat(binding.postedquantity); // Set the maximum value you want to allow
+            let sPath = oInput.getBindingContext("AsnSaItemsModel").getPath();
+            let oModel = this.getView().getModel("AsnSaItemsModel");
+            let oItem = oModel.getProperty(sPath);
 
-            // Allow only numbers and check if the value exceeds maxValue
-            if (isNaN(value) || value > maxValue) {
-                // Invalid input, revert to previous value or show an error
-                oInput.setValueState(sap.ui.core.ValueState.Error);
-                oInput.setValueStateText("Enter a valid number which should be less than or equals to " + maxValue);
-                oInput.setValue();
-                binding.AvailableQuantity = ""; //update entered Qty into available Quantity field
-                //reset Amount field value state for RAPO
-                let amountInput = this.getView().byId("idRAPO_Amount");
-                amountInput.setValueState(sap.ui.core.ValueState.None);
+            let orderQuantity = parseFloat(oItem.TargetQuantity) || 0;
+            let postedQuantity = parseFloat(oItem.postedquantity) || 0;
+            let enteredQuantity = parseFloat(oItem.EnteredQuantity) || 0;
+
+            // Clear previous value state
+            oInput.setValueState(sap.ui.core.ValueState.None);
+            oInput.setValueStateText("");
+
+            let totalQuantity = postedQuantity + enteredQuantity;
+
+            if (totalQuantity <= orderQuantity) {
+                // ✅ Valid case — update postedQuantity
+                // oModel.setProperty(sPath + "/Postedquantity", totalQuantity.toFixed(2));
             } else {
-                binding.EnteredQuantity = value;
-                binding.AvailableQuantity = value; //update entered Qty into available Quantity field
-                // Valid input, clear error state
-                oInput.setValueState(sap.ui.core.ValueState.None);
-                this.calculateMaxAmoutValue_RAPO(value);
+                // ❌ Invalid case — set error state and message
+                let allowedQty = orderQuantity - postedQuantity;
+                oInput.setValueState(sap.ui.core.ValueState.Error);
+                oInput.setValueStateText(
+                    `Enter a valid number which should be less than or equals to ${allowedQty}`
+                );
             }
         },
 
@@ -1493,102 +1483,6 @@ sap.ui.define([
                 SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;
 
 
-            // if (sInwardtype === "ReceiptAgainstPO") {
-            //     var Inwardtype = "RECPO";
-            //     /*SystemDate = oDateFormat.format(new Date(oView.byId("idRAPO_Date").getValue())),
-            //     time = oView.byId("idRAPO_Time").getValue().split(":"),
-            //     hours = time[0].length === 1 ? ('0' + time[0]) : time[0],
-            //     SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;*/
-            //     var Fiscalyear = oView.byId("idFiscalYear").getValue(),
-            //         InvoiceNo = oView.byId("idDocInvNo").getValue(),
-            //         InvoiceDate = oDateFormat.format(oView.byId("idRAPO_InvDate").getDateValue()),
-            //         Lrdate = oDateFormat.format(oView.byId("idRAPO_LR_Date").getDateValue()),
-            //         Lrnumber = oView.byId("idRAPO_LR_No").getValue(),
-            //         Ponumber = oView.byId("idRAPO_PO_Order").getValue(),
-            //         Vendor = this.selectedPOSchAggrVendor,
-            //         Ewayno = oView.byId("idRAPO_EwayNo").getValue(),
-            //         Amount = oView.byId("idRAPO_Amount").getValue(),
-            //         Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
-            //         Transporter = oView.byId("idRAPO_Trasporter").getValue();
-            //     if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
-            //         MessageToast.show("Fill all mandatory fields");
-            //         return;
-            //     }
-
-            //     let isQuantityEntered = true;
-            //     var itemData = [];
-            //     this.getView().byId("idTable_RAPO").getModel().getData().filter(item => {
-            //         if (item.AvailableQuantity === "" || item.EnteredQuantity === "") {
-            //             isQuantityEntered = false;
-            //         }
-            //         let obj = {
-            //             "Ponumber": Ponumber,
-            //             "LineItem": item.PurchaseOrderItem,
-            //             "Material": item.Material,
-            //             "Materialdesc": item.PurchaseOrderItemText,
-            //             "Quantity": parseFloat(item.Quantity).toFixed(2),
-            //             "PostedQuantity": parseFloat(item.AvailableQuantity).toFixed(2)
-            //         };
-            //         itemData.push(obj);
-            //     });
-            //     if (!isQuantityEntered) {
-            //         MessageToast.show("Enter Item Quantity");
-            //         return;
-            //     }
-            // }
-            // else if (sInwardtype === "ReceiptAsItIs") {
-            //     var Inwardtype = "RECASIS";
-            //     /*SystemDate = oDateFormat.format(new Date(oView.byId("idRAII_Date").getValue())),
-            //     time = oView.byId("idRAII_Time").getValue().split(":"),
-            //     hours = time[0].length === 1 ? ('0' + time[0]) : time[0],
-            //     SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;*/
-            //     var Fiscalyear = oView.byId("idRAII_FiscalYear").getValue(),
-            //         InvoiceNo = oView.byId("idRAII_DocInvNo").getValue(),
-            //         InvoiceDate = oDateFormat.format(oView.byId("idRAII_InvDate").getDateValue()),
-            //         Lrdate = oDateFormat.format(oView.byId("idRAII_LR_Date").getDateValue()),
-            //         Lrnumber = oView.byId("idRAII_LR_No").getValue(),
-            //         Ponumber = oView.byId("idRAII_Challan").getValue(),
-            //         Vendor = oView.byId("idRAII_Vendor").getValue(),
-            //         Ewayno = oView.byId("idRAII_EwayNo").getValue(),
-            //         Amount = oView.byId("idRAII_Amount").getValue(),
-            //         Vehicleno = oView.byId("idRAII_VehicalNo").getValue(),
-            //         Transporter = oView.byId("idRAII_Trasporter").getValue();
-            //     if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
-            //         MessageToast.show("Fill all mandatory fields");
-            //         return;
-            //     }
-
-            //     let isQuantityEntered = true;
-            //     let isMaterialSelected = true;
-            //     var itemData = [];
-            //     this.getView().byId("idTable_RAII").getModel().getData().filter(item => {
-            //         if (item.Product === "") {
-            //             isMaterialSelected = false;
-            //         }
-            //         if (item.AvailableQuantity === "") {
-            //             isQuantityEntered = false;
-            //         }
-            //         let obj = {
-            //             "Ponumber": Ponumber,
-            //             "LineItem": item.Itemno,
-            //             "Material": item.Product,
-            //             "Materialdesc": item.ProductName,
-            //             "Quantity": parseFloat(item.AvailableQuantity).toFixed(2)
-            //         };
-            //         itemData.push(obj);
-            //     });
-            //     if (!isMaterialSelected) {
-            //         MessageToast.show("Select Material");
-            //         return;
-            //     }
-            //     if (!isQuantityEntered) {
-            //         MessageToast.show("Enter Item Quantity");
-            //         return;
-            //     }
-            // }
-            // else {
-            //     var Inwardtype = "RECCH";
-            // }
             let InvoiceNo = this.getView().byId("idDocInvNo").getValue();
             let InvoiceDate = oDateFormat.format(oView.byId("idRAPO_InvDate").getDateValue()),
                 Lrnumber = oView.byId("idRAPO_LR_No").getValue(),
@@ -1612,13 +1506,13 @@ sap.ui.define([
                 if (item.AvailableQuantity === "" || item.EnteredQuantity === "") {
                     isQuantityEntered = false;
                 }
+                let toPostedQuanity = parseFloat(item.postedquantity) + parseFloat(item.EnteredQuantity);
                 let obj = {
                     "Ponumber": Ponumber,
                     "LineItem": item.PurchaseOrderItem,
                     "Material": item.Material,
                     "Materialdesc": item.PurchaseOrderItemText,
-                    "Quantity": parseFloat(item.Quantity1).toFixed(2),
-                    "Postedquantity": parseFloat(item.AvailableQuantity).toFixed(2)
+                    "Postedquantity": parseFloat(toPostedQuanity).toFixed(2)
                 };
                 itemData.push(obj);
             });
@@ -1653,37 +1547,52 @@ sap.ui.define([
                     that.getView().setBusy(false);
                     var qrDataToPrintQRCode = oResponse.data;
                     let qrData = oResponse.data;
-                    let gateEntryNo = qrData.GateEntryId;
+                    let gateEntryNo = qrData.AsnNo;
                     console.log(oResponse);
-                    var dialog = new Dialog("idPrintQRDialog", {
-                        title: 'Success',
-                        type: 'Message',
-                        state: 'Success',
-                        content: new sap.m.Text({
-                            text: `Asn  ${gateEntryNo} generated successfully`
-                        }),
-                        beginButton: new Button({
-                            text: 'Download ASN',
-                            press: function () {
-                                that.onViewQR(qrData); //call function to download QR code
-                                that.clearUIFields();
-                                dialog.close();
-                            }
-                        }),
-                        afterClose: function () {
-                            dialog.destroy();
-                        }
+                    let oTable = that.getView().byId("idTable_RAPO");
+                    let aItems = oTable.getModel("AsnSaItemsModel").getProperty("/Results") || [];
+                    // 3️⃣ Prepare array of POST promises
+                    var aPostPromises = aItems.map(function (oItem) {
+                        return Models.updateforItems(that, oItem, "ItemforSchAgr"); // must return a Promise
                     });
-                    dialog.open();
+                    Promise.all(aPostPromises)
+                        .then(function (aResponses) {
+                            var dialog = new Dialog("idPrintQRDialog", {
+                                title: 'Success',
+                                type: 'Message',
+                                state: 'Success',
+                                content: new sap.m.Text({
+                                    text: `Asn  ${gateEntryNo} generated successfully`
+                                }),
+                                beginButton: new Button({
+                                    text: 'Download ASN',
+                                    press: function () {
+                                        that.onViewQR(qrData); //call function to download QR code
+                                        that.clearUIFields();
+                                        dialog.close();
+                                    }
+                                }),
+                                afterClose: function () {
+                                    dialog.destroy();
+                                }
+                            });
+                            dialog.open();
 
-                    dialog.attachBrowserEvent("keydown", function (oEvent) {
-                        if (oEvent.key === "Escape") {
-                            //oEvent.preventDefault();
-                            that.onViewQR(qrDataToPrintQRCode); //call function to download QR code
-                            that.clearUIFields();
-                            dialog.close();
-                        }
-                    });
+                            dialog.attachBrowserEvent("keydown", function (oEvent) {
+                                if (oEvent.key === "Escape") {
+                                    //oEvent.preventDefault();
+                                    // that.onViewQR(qrDataToPrintQRCode); //call function to download QR code
+                                    that.clearUIFields();
+                                    dialog.close();
+                                    that.onNavBack();
+                                }
+                            });
+                        }).catch(function (err) {
+                            that.getView().byId("idTable_RAPO").setBusy(false);
+                            sap.m.MessageToast.show("Error saving items");
+                            console.error(err);
+                        });
+
 
                 },
                 error: function (e) {
@@ -1752,7 +1661,7 @@ sap.ui.define([
             doc.setFontSize(4.5);
             doc.setTextColor('#000');
 
-            doc.text(2, 5, `Gate Entry No: IN${qrData.GateEntryId}`);
+            doc.text(2, 5, `Asn No.: ${qrData.AsnNo}`);
             doc.text(2, 9, `QR Code/ASN: ${qrData.GateEntryId}`);
             doc.text(2, 13, `Inv No.: ${qrData.InvoiceNo}`);
             doc.text(2, 17, `Inv Date: ${formattedInvDate}`);
@@ -1766,7 +1675,7 @@ sap.ui.define([
             doc.text(33, 18, `Gt Date: ${formattedSystemDate}`);
 
             // Save the PDF to a file
-            doc.save(`ASN_${qrData.GateEntryId}.pdf`);
+            doc.save(`ASN_${qrData.AsnNo}.pdf`);
         },
 
         clearUIFields: function () {
@@ -1776,44 +1685,19 @@ sap.ui.define([
             // oView.byId("idDropdownPlant").setValue();
             oView.byId("idRAPO_Date").setValue();
             oView.byId("idRAPO_Time").setValue();
-            // let sInwardtype = oView.byId("idDropdownInwardType").getSelectedKey();
-            // if (sInwardtype === "ReceiptAgainstPO") {
             oView.byId("idDocInvNo").setValue();
-            // oView.byId("idDropdownInwardType").setSelectedKey();
-            // oView.byId("idDropdownInwardType").setValue();
 
             oView.byId("idRAPO_InvDate").setValue();
             oView.byId("idRAPO_LR_Date").setValue();
             oView.byId("idRAPO_EWAY_Date").setValue();
             oView.byId("idRAPO_LR_No").setValue();
-            oView.byId("idRAPO_PO_Order").setValue();
+            // oView.byId("idRAPO_PO_Order").setValue();
             oView.byId("idRAPO_EwayNo").setValue();
             oView.byId("idRAPO_Amount").setValue();
             oView.byId("idRAPO_VehicalNo").setValue();
             oView.byId("idRAPO_Trasporter").setValue();
             let tModel = new sap.ui.model.json.JSONModel([]);
             oView.byId("idTable_RAPO").setModel(tModel);
-            // }
-            // else if (sInwardtype === "ReceiptAsItIs") {
-            //     oView.byId("idDropdownInwardType").setSelectedKey();
-            //     oView.byId("idDropdownInwardType").setValue();
-            //     //oView.byId("idRAII_Date").setValue();
-            //     //oView.byId("idRAII_Time").setValue();
-            //     oView.byId("idRAII_InvDate").setValue();
-            //     oView.byId("idRAII_LR_Date").setValue();
-            //     oView.byId("idRAII_LR_No").setValue();
-            //     oView.byId("idRAII_Challan").setValue();
-            //     oView.byId("idRAII_Vendor").setValue();
-            //     oView.byId("idRAII_DocInvNo").setValue();
-            //     oView.byId("idRAII_EwayNo").setValue();
-            //     oView.byId("idRAII_Amount").setValue();
-            //     oView.byId("idRAII_VehicalNo").setValue();
-            //     oView.byId("idRAII_Trasporter").setValue();
-            //     let tModel = new sap.ui.model.json.JSONModel([]);
-            //     oView.byId("idTable_RAII").setModel(tModel);
-            // }
-            // oView.byId("idPanelRAPO").setVisible(false);
-            // oView.byId("idPanelRAII").setVisible(false);
             //oView.byId("idPanelChallan").setVisible(false);
         },
 

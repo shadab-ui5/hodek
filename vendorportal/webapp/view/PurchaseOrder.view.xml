@@ -34,11 +34,11 @@
                                 <!-- <Text id="idPoHeadPlant" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/PlantName}"/> -->
                                 <Text id="_IDGenText19" class="textDesin" text="{RoutePoData>/PoHeader/PlantName}({RoutePoData>/PoHeader/Plant})" />
                             </VBox>
-                            <VBox id="_IDGenVBox16" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
+                            <!-- <VBox id="_IDGenVBox16" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel18" class="labelDesin" design="Bold" text="Purchase Order" />
-                                <!-- <Text id="idPoHeadPO" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/PurchaseOrder}"/> -->
+            
                                 <Text id="_IDGenText20" class="textDesin" text="{RoutePoData>/PoHeader/PurchaseOrder}" />
-                            </VBox>
+                            </VBox> -->
                             <VBox id="_IDGenVBox17" alignItems="Start" alignContent="Center" justifyContent="Start" class="sapUiContentPadding">
                                 <Label id="_IDGenLabel19" class="labelDesin" design="Bold" text="Supplier" />
                                 <!-- <Text id="idPoHeadSupplier" class="sapUiTinyMarginBegin" text="{RoutePoData>/PoHeader/Supplier}"/> -->
@@ -65,10 +65,10 @@
                         <OverflowToolbar id="_IDGenOverflowToolbar">
                             <Title id="_IDGenTitle6" text="Items" level="H2"/>
                             <ToolbarSpacer id="_IDGenToolbarSpacer1"/>
-                            <Button id="_IDGenButton3" tooltip="Sort" icon="sap-icon://sort" press="handleSortButtonPressed"/>
+                            <!-- <Button id="_IDGenButton3" tooltip="Sort" icon="sap-icon://sort" press="handleSortButtonPressed"/>
                             <Button id="_IDGenButton5" tooltip="Filter" icon="sap-icon://filter" press="handleFilterButtonPressed"/>
                             <Button id="_IDGenButton6" tooltip="Group" icon="sap-icon://group-2" press="handleGroupButtonPressed"/>
-                            <ToggleButton id="_IDGenToggleButton1" icon="sap-icon://menu" tooltip="Enable Custom Context Menu" press="onToggleContextMenu" />
+                            <ToggleButton id="_IDGenToggleButton1" icon="sap-icon://menu" tooltip="Enable Custom Context Menu" press="onToggleContextMenu" /> -->
                         </OverflowToolbar>
                     </headerToolbar>
                     <infoToolbar>

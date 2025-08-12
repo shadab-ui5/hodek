@@ -6,7 +6,7 @@
     xmlns:f="sap.f"
     xmlns:svm="sap.ui.comp.smartvariants">
 
-    <!-- <Page id="saOrderpage" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack"> -->
+    <Page id="saOrderpage" title="Vendor Portal" showHeader="false" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack">
         <fb:FilterBar id="filterbarsa" useToolbar="false" search=".onSearch" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
             <fb:filterGroupItems>
 
@@ -71,10 +71,10 @@
                 <OverflowToolbar id="_IDGenOverflowToolbar4" >
                     <Title id="_IDGenTitle"  text="Scheduling Agreement" level="H2"/>
                     <ToolbarSpacer id="_IDGenToolbarSpacer2" />
-                    <Button id="_IDGenButton10"  tooltip="Sort" icon="sap-icon://sort" press="handleSortButtonPressed"/>
+                    <!-- <Button id="_IDGenButton10"  tooltip="Sort" icon="sap-icon://sort" press="handleSortButtonPressed"/>
                     <Button id="_IDGenButton11"  tooltip="Filter" icon="sap-icon://filter" press="handleFilterButtonPressed"/>
                     <Button id="_IDGenButton12"  tooltip="Group" icon="sap-icon://group-2" press="handleGroupButtonPressed"/>
-                    <ToggleButton id="_IDGenToggleButton2"  icon="sap-icon://menu" tooltip="Enable Custom Context Menu" press="onToggleContextMenu" />
+                    <ToggleButton id="_IDGenToggleButton2"  icon="sap-icon://menu" tooltip="Enable Custom Context Menu" press="onToggleContextMenu" /> -->
                 </OverflowToolbar>
             </headerToolbar>
             <infoToolbar>
@@ -128,7 +128,7 @@
                 </ColumnListItem>
             </items>
         </Table>
-    <!-- </Page> -->
+    </Page>
     
 
 </mvc:View>

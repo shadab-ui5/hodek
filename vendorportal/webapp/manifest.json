@@ -139,6 +139,13 @@
           ]
         },
         {
+          "name": "RouteCancelAsn",
+          "pattern": "cancelAsn",
+          "target": [
+            "TargetCancelAsn"
+          ]
+        },
+        {
           "name": "RouteScheduleAgreeOrder",
           "pattern": "sano/{po}",
           "target": [
@@ -189,6 +196,15 @@
         "TargetAsnReprint": {
           "id": "ReprintAsn",
           "name": "ReprintAsn",
+          "viewType": "XML",
+          "viewLevel": 2,
+          "controlId": "Main__NavContainer",
+          "controlAggregation": "pages",
+          "clearControlAggregation": true
+        },
+        "TargetCancelAsn": {
+          "id": "CancelAsn",
+          "name": "CancelAsn",
           "viewType": "XML",
           "viewLevel": 2,
           "controlId": "Main__NavContainer",

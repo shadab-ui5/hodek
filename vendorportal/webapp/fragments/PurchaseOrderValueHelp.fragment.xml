@@ -25,8 +25,8 @@
                     <Text text="{parts:[{path:'PoModelVh>PurchaseOrder'},{path:'PoModelVh>purchaseOrderText'}],formatter:'.formatter.formatPurchaseOrderText'}" />
                     <Text text="{PoModelVh>SupplierName} ( {PoModelVh>Supplier} )" />
                     <Text text="{PoModelVh>CompanyCode}" />
-                    <Text text="{PoModelVh>PurchasingGroup}" />
-                    <Text text="{PoModelVh>Plant}" />
+                    <Text text="{PoModelVh>PurchasingGroup}({PoModelVh>PurchasingGroupName})" />
+                    <Text text="{PoModelVh>PlantName}({PoModelVh>Plant})" />
                 </cells>
             </ColumnListItem>
         </items>

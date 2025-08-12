@@ -40,7 +40,7 @@ sap.ui.define([
             if (sPreviousHash !== undefined) {
                 window.history.go(-1);
             } else {
-                this.getOwnerComponent().getRouter().navTo("RouteVendorPortal", {}, true); // replace with actual route
+                this.getOwnerComponent().getRouter().navTo("RouteSchedulingAgg", {}, true); // replace with actual route
             }
         },
         onNavNext: function () {

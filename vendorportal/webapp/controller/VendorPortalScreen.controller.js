@@ -23,8 +23,8 @@ sap.ui.define([
             this.getOwnerComponent().setModel(oTableModel, "TableModelPO");
             this.getOwnerComponent().setModel(oRouteData, "RoutePoData");
 
-            const oBusyDialog = new sap.m.BusyDialog({ text: "Loading data..." });
-            oBusyDialog.open();
+            this.oBusyDialog = new sap.m.BusyDialog({ text: "Loading Filters.." });
+            this.oBusyDialog.open();
 
             let that = this;
             const oPoModelVh = new sap.ui.model.json.JSONModel();
@@ -43,7 +43,7 @@ sap.ui.define([
 
                         that.getOwnerComponent().getModel("SupplierVHModel").setData(oData.results);
                         console.log("UserInfo Loaded..")
-                        that.loadPurchaseOrderFilter(oBusyDialog);
+                        that.loadPurchaseOrderFilter();
                     }).catch((oError) => {
                         console.error("Failed to load Purchase Orders:", oError);
                     });
@@ -58,23 +58,24 @@ sap.ui.define([
 
                     that.getOwnerComponent().getModel("SupplierVHModel").setData(oData.results);
                     console.log("UserInfo Loaded..")
-                    that.loadPurchaseOrderFilter(oBusyDialog);
+                    that.loadPurchaseOrderFilter();
                 }).catch((oError) => {
                     console.error("Failed to load Purchase Orders:", oError);
                 });;
             }
 
         },
-        loadPurchaseOrderFilter: function (oBusyDialog) {
+        loadPurchaseOrderFilter: function () {
             // Load PO data and build company code model
             let that = this;
+            that.oBusyDialog.setText("Setting Filters...");
             Models._loadPurchaseOrders(this, "", 0, 4999).then((result) => {
                 const uniqueCompanies = [...new Map(
                     result
                         .filter(item => item.CompanyCode)
                         .map(item => [item.CompanyCode, { CompanyCode: item.CompanyCode, CompanyCodeName: item.CompanyCodeName }])
                 ).values()];
-
+                that.oBusyDialog.setText("Almost Done...");
                 that.getView().getModel("CompanyCodeModel").setData(uniqueCompanies);
                 that.getView().byId("idPoCompanyCode")?.getBinding("items")?.refresh();
 
@@ -88,9 +89,9 @@ sap.ui.define([
                     this.getView().byId("idPoCompanyCode").setSelectedKey(aCompanyCodes[0].CompanyCode);
                 }
 
-                oBusyDialog.close();
+                that.oBusyDialog.close();
             }).catch((oError) => {
-                oBusyDialog.close();
+                that.oBusyDialog.close();
                 console.error("Failed to load Purchase Orders:", oError);
             });
         },

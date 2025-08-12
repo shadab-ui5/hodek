@@ -190,6 +190,9 @@ sap.ui.define([
                 // 🔍 Read data from OData service with filters
                 oModel.read("/PoHdr", {
                     filters: aFilters,
+                    urlParameters: {
+                            "$orderby": "CreationDate desc",
+                        },
                     success: function (oData) {
                         const map = new Map();
                         const uniqueResults = [];
@@ -231,7 +234,6 @@ sap.ui.define([
                 else {
                     let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
                     const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
-                    uniqueSupplier.push('1100000'); /// removewhile deployment
                     const oOrFilter = new sap.ui.model.Filter(
                         uniqueSupplier.map(group =>
                             new sap.ui.model.Filter("Supplier", sap.ui.model.FilterOperator.EQ, group)
@@ -298,6 +300,9 @@ sap.ui.define([
                 // 🔍 Read data from OData service with filters
                 oModel.read("/SaHdr", {
                     filters: aFilters,
+                    urlParameters: {
+                            "$orderby": "CreationDate desc",
+                        },
                     success: function (oData) {
                         const map = new Map();
                         const uniqueResults = [];
@@ -379,6 +384,7 @@ sap.ui.define([
                     console.log("Unique Suppliers:", uniqueSupplier)
                     // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
                     let aFilters = [];
+                    // aFilters.push(new sap.ui.model.Filter("Status", sap.ui.model.FilterOperator.EQ, '01'));
                     if (sQuery) {
                         let oSearch = new sap.ui.model.Filter({
                             filters: [
@@ -391,27 +397,24 @@ sap.ui.define([
                         });
                         aFilters.push(oSearch);
                     } else {
-                        // const oOrFilter = new sap.ui.model.Filter(
-                        //     uniqueSupplier.map(group =>
-                        //         new sap.ui.model.Filter("Vendor", sap.ui.model.FilterOperator.EQ, group)
-                        //     ),
-                        //     false // OR
-                        // );
-                        // aFilters.push(oOrFilter);
+                        const oOrFilter = new sap.ui.model.Filter(
+                            uniqueSupplier.map(group =>
+                                new sap.ui.model.Filter("Vendor", sap.ui.model.FilterOperator.EQ, group)
+                            ),
+                            false // OR
+                        );
+                        aFilters.push(oOrFilter);
                     }
 
                     oModel.read("/asnHdr", {
                         filters: aFilters,
                         urlParameters: {
                             "$top": iTop,
-                            "$skip": iSkip
+                            "$skip": iSkip,
+                            "$orderby": "AsnNo desc",
                         },
                         success: (oData) => {
-                            oData.results.sort((a, b) => {
-                                return Number(b.AsnNo) - Number(a.AsnNo);
-                            });
-                            let oModel = _this.getOwnerComponent().getModel("AsnHeaderModel");
-                            oModel.setProperty("/AsnData", oData.results);
+
                             resolve(oData.results)
 
                         },
@@ -427,7 +430,6 @@ sap.ui.define([
                     let oModel = _this.getOwnerComponent().getModel("vendorModel");
                     let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
                     const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
-                    uniqueSupplier.push('1100000'); /// removewhile deployment
                     console.log("Unique Suppliers:", uniqueSupplier)
                     // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
                     let aFilters = [];
@@ -539,6 +541,59 @@ sap.ui.define([
                 });
             },
 
+            updateAsnStatus: function (_this, sAsnNo, Remark, oDialog) {
+                let oModel = _this.getOwnerComponent().getModel("vendorModel"); // Your OData model
+
+                // Build the path to the entity — make sure ASN is zero-padded exactly as backend expects
+                let sPath = `/InwardGateHeader('${sAsnNo}')`;
+
+                let oPayload = {
+                    Status: "02", // Field to update
+                    Remarks: Remark
+                };
+
+                oModel.update(sPath, oPayload, {
+                    success: function () {
+                        sap.m.MessageToast.show(`Status updated to 02 for ASN: ${sAsnNo}`);
+
+                        _this.iSkip = 0;
+                        _this.iTop = 20; // page size
+                        _this.sQuery = ""
+                        _this.getOwnerComponent().getModel("AsnHeaderModel").setProperty("/AsnData", "");
+                        _this.loadPurchaseOrderFilter()
+                        oDialog.setBusy(false);
+                        oDialog.close();
+                    },
+                    error: function (oError) {
+                        sap.m.MessageBox.error("Failed to update ASN status.\n" + oError.message);
+                        oDialog.setBusy(false);
+                    }
+                });
+            },
+            updateforItems: function (that, oParam, entity) {
+                let url;
+                let oUpdatePayload = {
+                    postedquantity: parseFloat(parseFloat(oParam.postedquantity) + parseFloat(oParam.EnteredQuantity)).toFixed(2)// change this if you get posted qty from somewhere else
+                };
+                if (entity === "ItemforPo") {
+                    url = `/ItemforPo(PurchaseOrder='${oParam.PurchaseOrder}',PurchaseOrderItem='${oParam.PurchaseOrderItem}')`;
+                } else {
+                    url = `/ItemforSchAgr(SchedulingAgreement='${oParam.SchedulingAgreement}',SchedulingAgreementItem='${oParam.SchedulingAgreementItem}')`;
+                }
+                that.getOwnerComponent().getModel("vendorModel").update(url
+                    ,
+                    oUpdatePayload,
+                    {
+                        method: "POST", // or "MERGE"/"PATCH" depending on your service definition
+                        success: function () {
+                            console.log("Posted quantity updated successfully for PO:", sPO, "Item:", sPOItem);
+                        },
+                        error: function (err) {
+                            console.error("Failed to update ItemforPo:", err);
+                        }
+                    }
+                );
+            }
 
 
 

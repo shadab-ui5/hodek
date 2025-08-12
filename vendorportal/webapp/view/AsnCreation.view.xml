@@ -57,7 +57,7 @@
 
                         <VBox id="_IDGenVBox6" width="20%">
                             <Label id="_IDGenLabel6" text="Invoice/DC Date" required="true"/>
-                            <DatePicker id="idRAPO_InvDate"  width="75%" placeholder="Select Date" displayFormat="yyyy-MM-dd" enabled="true" class="sapUiSmallMarginBottom"/>
+                            <DatePicker id="idRAPO_InvDate" width="75%" placeholder="Select Date" displayFormat="yyyy-MM-dd" enabled="true" class="sapUiSmallMarginBottom"/>
                         </VBox>
                         <VBox id="_IDGenVBox7" width="20%">
                             <Label id="_IDGenLabel7" text="Vehical Number" required="true"/>
@@ -73,7 +73,7 @@
                         </VBox>
                         <VBox id="_IDGenVBox24" width="20%">
                             <Label id="_IDGenLabel29" text="Eway Date"/>
-                            <DatePicker id="idRAPO_EWAY_Date" width="75%"  placeholder="Select Date" change="handleChange_RAPO_EWAYDate" displayFormat="yyyy-MM-dd" enabled="true" class="sapUiSmallMarginBottom"/>
+                            <DatePicker id="idRAPO_EWAY_Date" width="75%" placeholder="Select Date" change="handleChange_RAPO_EWAYDate" displayFormat="yyyy-MM-dd" enabled="true" class="sapUiSmallMarginBottom"/>
                         </VBox>
                     </HBox>
 
@@ -95,11 +95,12 @@
                             <Text id="idSupplier" text="{RoutePoData>/PoHeader/Supplier}" class="sapUiSmallMarginBottom"/>
                         </VBox>
                     </HBox>
-                    
+
                 </f:content>
             </f:DynamicPageHeader>
         </f:header>
         <f:content >
+
             <IconTabBar id="iconTabBar" class="sapUiNoContentPadding">
                 <items>
                     <IconTabFilter id="_IDGenIconTabFilter3" text="Items">
@@ -131,6 +132,12 @@
                                     <Column id="_IDGenColumn7">
                                         <Text id="_IDGenText11" text="Quantity" />
                                     </Column>
+                                    <Column visible="false">
+                                        <Text text="OrderQuantity" />
+                                    </Column>
+                                    <Column visible="false">
+                                        <Text text="postedquantity" />
+                                    </Column>
                                 </columns>
                                 <items>
                                     <ColumnListItem id="_IDGenColumnListItem">
@@ -141,8 +148,9 @@
                                             <Text id="_IDGenText17" text="{AsnItemsModel>PurchaseOrderItemText}"/>
                                             <!-- <Input id="_IDGenInput" value="{Material}" showValueHelp="true" valueHelpOnly="true" valueHelpRequest="material_RAPOValueHelp"/> -->
                                             <Text id="_" text="{AsnItemsModel>BaseUnit}" />
-                                            <Input id="idInpRAPOItemQuantity" value="{EnteredQuantity}" change="onChangeRAPOItemQuantity" type="Number" />
-
+                                            <Input id="idInpRAPOItemQuantity" value="{AsnItemsModel>EnteredQuantity}" change="onChangeRAPOItemQuantity" type="Number" />
+                                            <Text text="{AsnItemsModel>OrderQuantity}" />
+                                            <Text text="{AsnItemsModel>postedquantity}" />
                                         </cells>
                                     </ColumnListItem>
                                 </items>
@@ -230,7 +238,6 @@
                     </IconTabFilter>
                 </items>
             </IconTabBar>
-
         </f:content>
     </f:DynamicPage>
     <!-- </Page> -->
