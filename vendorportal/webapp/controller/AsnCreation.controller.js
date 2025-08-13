@@ -778,6 +778,7 @@ sap.ui.define([
         // },
 
         onChangeRAPOItemQuantity: function (oEvent) {
+            this.errorQuantity = false;
             let oInput = oEvent.getSource();
             let sPath = oInput.getBindingContext("AsnItemsModel").getPath();
             let oModel = this.getView().getModel("AsnItemsModel");
@@ -800,6 +801,7 @@ sap.ui.define([
                 // ❌ Invalid case — set error state and message
                 let allowedQty = orderQuantity - postedQuantity;
                 oInput.setValueState(sap.ui.core.ValueState.Error);
+                this.errorQuantity = true;
                 oInput.setValueStateText(
                     `Enter a valid number which should be less than or equals to ${allowedQty}`
                 );
@@ -1272,7 +1274,10 @@ sap.ui.define([
                 MessageToast.show("Fill all mandatory fields");
                 return;
             }
-
+            if (this.errorQuantity) {
+                MessageToast.show("Enter a valid Quantity");
+                return;
+            }
             let isQuantityEntered = true;
             var itemData = [];
             this.getView().byId("idTable_RAPO").getModel("AsnItemsModel").getProperty("/Results").filter(item => {
@@ -1326,7 +1331,7 @@ sap.ui.define([
                     let aItems = oTable.getModel("AsnItemsModel").getProperty("/Results") || [];
                     // 3️⃣ Prepare array of POST promises
                     var aPostPromises = aItems.map(function (oItem) {
-                        return Models.updateforItems(that, oItem,"ItemforPo"); // must return a Promise
+                        return Models.updateforItems(that, oItem, "ItemforPo"); // must return a Promise
                     });
                     Promise.all(aPostPromises)
                         .then(function (aResponses) {

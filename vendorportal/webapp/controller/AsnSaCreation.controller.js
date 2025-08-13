@@ -1004,6 +1004,7 @@ sap.ui.define([
         },
 
         onChangeRAPOItemQuantity: function (oEvent) {
+            this.errorQuantity=false;
             let oInput = oEvent.getSource();
             let sPath = oInput.getBindingContext("AsnSaItemsModel").getPath();
             let oModel = this.getView().getModel("AsnSaItemsModel");
@@ -1026,6 +1027,7 @@ sap.ui.define([
                 // ❌ Invalid case — set error state and message
                 let allowedQty = orderQuantity - postedQuantity;
                 oInput.setValueState(sap.ui.core.ValueState.Error);
+                this.errorQuantity=true;
                 oInput.setValueStateText(
                     `Enter a valid number which should be less than or equals to ${allowedQty}`
                 );
@@ -1497,6 +1499,10 @@ sap.ui.define([
                 Transporter = oView.byId("idRAPO_Trasporter").getValue();
             if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || EwayDate === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
                 MessageToast.show("Fill all mandatory fields");
+                return;
+            }
+            if(this.errorQuantity){
+                MessageToast.show("Enter a valid Quantity");
                 return;
             }
 
