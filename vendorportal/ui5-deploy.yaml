@@ -20,6 +20,6 @@ builder:
         app:
           name: ZVENDORPORTAL
           package: ZMM_VENDOR_PORTAL
-          transport: REPLACE_WITH_TRANSPORT
+          transport: TMOK900202
         exclude:
           - /test/

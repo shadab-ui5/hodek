@@ -37,10 +37,10 @@
     },
     "crossNavigation": {
       "inbounds": {
-        "vendorpor-managed": {
-          "semanticObject": "vendorpor",
-          "action": "managed",
-          "title": "{{vendorpor-managed.flpTitle}}",
+        "zvendorportal-manage": {
+          "semanticObject": "zvendorportal",
+          "action": "manage",
+          "title": "{{zvendorportal-manage.flpTitle}}",
           "signature": {
             "parameters": {},
             "additionalParameters": "allowed"

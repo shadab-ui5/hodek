@@ -1518,6 +1518,7 @@ sap.ui.define([
                     "LineItem": item.PurchaseOrderItem,
                     "Material": item.Material,
                     "Materialdesc": item.PurchaseOrderItemText,
+                    "Quantity":parseFloat(item.TargetQuantity).toFixed(2),
                     "Postedquantity": parseFloat(toPostedQuanity).toFixed(2)
                 };
                 itemData.push(obj);
