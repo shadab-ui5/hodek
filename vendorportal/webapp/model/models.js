@@ -191,8 +191,8 @@ sap.ui.define([
                 oModel.read("/PoHdr", {
                     filters: aFilters,
                     urlParameters: {
-                            "$orderby": "CreationDate desc",
-                        },
+                        "$orderby": "CreationDate desc",
+                    },
                     success: function (oData) {
                         const map = new Map();
                         const uniqueResults = [];
@@ -218,10 +218,10 @@ sap.ui.define([
             searchSaHeader: function (_this, oView, oModel, oTableModel) {
                 const aFilters = [];
                 let oStartDateFormat = DateFormat.getInstance({
-                    pattern: "yyyy-MM-dd'T'00:00:00"
+                    pattern: "yyyy-MM-dd"
                 });
                 let oEndDateFormat = DateFormat.getInstance({
-                    pattern: "yyyy-MM-dd'T'23:59:59"
+                    pattern: "yyyy-MM-dd"
                 });
                 // Supplier (MultiComboBox)
                 const aSelectedSuppliers = oView.byId("idPoSupplier").getTokens().map(function (oToken) {
@@ -301,8 +301,8 @@ sap.ui.define([
                 oModel.read("/SaHdr", {
                     filters: aFilters,
                     urlParameters: {
-                            "$orderby": "CreationDate desc",
-                        },
+                        "$orderby": "CreationDate desc",
+                    },
                     success: function (oData) {
                         const map = new Map();
                         const uniqueResults = [];
@@ -377,6 +377,12 @@ sap.ui.define([
             },
             _loadAsn: function (_this, sQuery, iSkip, iTop) {
                 return new Promise((resolve, reject) => {
+                    let oStartDateFormat = DateFormat.getInstance({
+                        pattern: "yyyy-MM-dd"
+                    });
+                    let oEndDateFormat = DateFormat.getInstance({
+                        pattern: "yyyy-MM-dd"
+                    });
                     let oModel = _this.getOwnerComponent().getModel("vendorModel");
                     let oSupplierVHModel = _this.getOwnerComponent().getModel("SupplierVHModel").getData();
                     const uniqueSupplier = [...new Set(oSupplierVHModel.map(obj => obj.Supplier))];
@@ -384,8 +390,29 @@ sap.ui.define([
                     console.log("Unique Suppliers:", uniqueSupplier)
                     // let aFilters = [new sap.ui.model.Filter("CreatedByUser", "EQ", sUser)];
                     let aFilters = [];
-                    // aFilters.push(new sap.ui.model.Filter("Status", sap.ui.model.FilterOperator.EQ, '01'));
-                    if (sQuery) {
+                    aFilters.push(new sap.ui.model.Filter("Status", sap.ui.model.FilterOperator.EQ, '01'));
+                    if (sQuery === "onFilterGo") {
+                        // Get field values from the view
+                        let asnFieldValue = _this.byId("asnField").getValue();
+                        let invoiceFieldValue = _this.byId("invoiceField").getValue();
+                        let oDateRange = _this.byId("idprintPurchDate").getDateValue();
+                        let oDateRangeTo = _this.byId("idprintPurchDate").getSecondDateValue();
+
+                        // Add ASN filter if value is provided
+                        if (asnFieldValue) {
+                            aFilters.push(new sap.ui.model.Filter("AsnNo", "Contains", asnFieldValue));
+                        }
+                        // Add Invoice No filter if value is provided
+                        if (invoiceFieldValue) {
+                            aFilters.push(new sap.ui.model.Filter("InvoiceNo", "Contains", invoiceFieldValue));
+                        }
+                        // Add Invoice Date range filter if both dates are selected
+                        if (oDateRange && oDateRangeTo) {
+                            const fromDate = oStartDateFormat.format(new Date(oDateRange)); // "2025-08-07"
+                            const toDate = oEndDateFormat.format(new Date(oDateRangeTo));     // "2025-08-08"
+                            aFilters.push(new sap.ui.model.Filter("InvoiceDate", sap.ui.model.FilterOperator.BT, fromDate, toDate));
+                        }
+                    } else if (sQuery) {
                         let oSearch = new sap.ui.model.Filter({
                             filters: [
                                 new sap.ui.model.Filter("AsnNo", "Contains", sQuery),
@@ -396,15 +423,15 @@ sap.ui.define([
                             and: false
                         });
                         aFilters.push(oSearch);
-                    } else {
-                        const oOrFilter = new sap.ui.model.Filter(
-                            uniqueSupplier.map(group =>
-                                new sap.ui.model.Filter("Vendor", sap.ui.model.FilterOperator.EQ, group)
-                            ),
-                            false // OR
-                        );
-                        aFilters.push(oOrFilter);
                     }
+                    const oOrFilter = new sap.ui.model.Filter(
+                        uniqueSupplier.map(group =>
+                            new sap.ui.model.Filter("Vendor", sap.ui.model.FilterOperator.EQ, group)
+                        ),
+                        false // OR
+                    );
+                    aFilters.push(oOrFilter);
+
 
                     oModel.read("/asnHdr", {
                         filters: aFilters,
@@ -514,7 +541,29 @@ sap.ui.define([
                     filters: [oFinalFilter],
                     success: (oData) => {
                         // Set data to a new model to use in table
-                        const oResultModel = new sap.ui.model.json.JSONModel({ Results: oData.results });
+                        let grouped = {};
+
+                        oData.results.forEach(item => {
+                            const key = item.PurchaseOrder + "-" + item.PurchaseOrderItem;
+
+                            if (!grouped[key]) {
+                                grouped[key] = [item];
+                            } else {
+                                grouped[key].push(item);
+                            }
+                        });
+
+                        // Step 2: For each group, get the entry with maximum postedquantity
+                        let filteredResults = [];
+
+                        for (let key in grouped) {
+                            const group = grouped[key];
+                            let maxItem = group.reduce((prev, current) => {
+                                return (parseFloat(current.postedquantity) > parseFloat(prev.postedquantity)) ? current : prev;
+                            });
+                            filteredResults.push(maxItem);
+                        }
+                        const oResultModel = new sap.ui.model.json.JSONModel({ Results: filteredResults });
                         _this.getView().setModel(oResultModel, "AsnItemsModel");
                         _this.getView().setBusy(false);
                     },
@@ -529,6 +578,29 @@ sap.ui.define([
                 oModel.read("/ItemforSchAgr", {
                     filters: [oFinalFilter],
                     success: (oData) => {
+                        // Step 1: Group by unique key (SchedulingAgreement + SchedulingAgreementItem)
+                        let grouped = {};
+
+                        oData.results.forEach(item => {
+                            const key = item.SchedulingAgreement + "-" + item.SchedulingAgreementItem;
+
+                            if (!grouped[key]) {
+                                grouped[key] = [item];
+                            } else {
+                                grouped[key].push(item);
+                            }
+                        });
+
+                        // Step 2: For each group, get the entry with maximum postedquantity
+                        let filteredResults = [];
+
+                        for (let key in grouped) {
+                            const group = grouped[key];
+                            let maxItem = group.reduce((prev, current) => {
+                                return (parseFloat(current.postedquantity) > parseFloat(prev.postedquantity)) ? current : prev;
+                            });
+                            filteredResults.push(maxItem);
+                        }
                         // Set data to a new model to use in table
                         const oResultModel = new sap.ui.model.json.JSONModel({ Results: oData.results });
                         _this.getView().setModel(oResultModel, "AsnSaItemsModel");

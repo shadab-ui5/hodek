@@ -83,7 +83,7 @@
                         <Column id="_IDGenColumn8">
                             <Text id="_IDGenText25" text="Item" />
                         </Column>
-                        <Column id="_IDGenColumn9">
+                        <Column id="_IDGenColumn9" visible="false">
                             <Text id="_IDGenText26" text="Plant" />
                         </Column>
                         <Column id="_IDGenColumn10">

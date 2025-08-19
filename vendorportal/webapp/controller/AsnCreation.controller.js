@@ -10,8 +10,9 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/m/library",
     'sap/ui/core/library',
-    "sap/ui/core/format/DateFormat"
-], (Controller, Models, Formatter, Dialog, Button, MessageBox, MessageToast, Fragment, mobileLibrary, coreLibrary, DateFormat) => {
+    "sap/ui/core/format/DateFormat",
+    "sap/m/UploadCollectionParameter",
+], (Controller, Models, Formatter, Dialog, Button, MessageBox, MessageToast, Fragment, mobileLibrary, coreLibrary, DateFormat, UploadCollectionParameter) => {
     "use strict";
     //QR & PDF in use libraries //
     jQuery.sap.require("hodek.vendorportal.model.qrCode");
@@ -74,6 +75,7 @@ sap.ui.define([
 
         },
         _onRouteMatched: function (oEvent) {
+            // this._loadDocuments();
             var sPoNumber = oEvent.getParameter("arguments").po;
             this.purchaseOrder = sPoNumber;
             console.log("Routed PO ID:", sPoNumber);
@@ -151,6 +153,9 @@ sap.ui.define([
                     po: this.purchaseOrder
                 }, true); // replace with actual route
             }
+        },
+        onNavFirstPage: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteVendorPortal", {}, true); // replace with actual route
         },
         onRAPOInvoiceDateChange: function (oEvent) {
             var oDatePicker = oEvent.getSource();
@@ -1249,151 +1254,162 @@ sap.ui.define([
             let that = this;
             let oView = this.getView();
             let Plant = oView.byId("idDropdownPlant").getValue();
-
-            let oDateFormat = DateFormat.getInstance({
-                pattern: "yyyy-MM-dd'T'00:00:00"
-            });
-            let SystemDate = oDateFormat.format(new Date(oView.byId("idRAPO_Date").getValue())),
-                time = oView.byId("idRAPO_Time").getValue().split(":"),
-                hours = time[0].length === 1 ? ('0' + time[0]) : time[0],
-                SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;
-
-            let InvoiceNo = this.getView().byId("idDocInvNo").getValue();
-            let InvoiceDate = oDateFormat.format(oView.byId("idRAPO_InvDate").getDateValue()),
-                Lrnumber = oView.byId("idRAPO_LR_No").getValue(),
-                Lrdate = oDateFormat.format(oView.byId("idRAPO_LR_Date").getDateValue()),
-                EwayDate = oDateFormat.format(oView.byId("idRAPO_EWAY_Date").getDateValue()),
-                Ponumber = oView.byId("idRAPO_PO_Order").getValue(),
-                Vendor = oView.byId("idSupplier").getText(),
-                Ewayno = oView.byId("idRAPO_EwayNo").getValue(),
-                Amount = oView.byId("idRAPO_Amount").getValue(),
-                Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
-                purchaseOrder = oView.byId("idRAPO_PO_Order").getValue(),
-                Transporter = oView.byId("idRAPO_Trasporter").getValue();
-            if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || EwayDate === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
-                MessageToast.show("Fill all mandatory fields");
+            if (this.checkQuantityInputErrors()) {
+                sap.m.MessageToast.show("Please correct quantity errors before saving.");
                 return;
             }
-            if (this.errorQuantity) {
-                MessageToast.show("Enter a valid Quantity");
-                return;
-            }
-            let isQuantityEntered = true;
-            var itemData = [];
-            this.getView().byId("idTable_RAPO").getModel("AsnItemsModel").getProperty("/Results").filter(item => {
-                if (item.AvailableQuantity === "" || item.EnteredQuantity === "") {
-                    isQuantityEntered = false;
-                }
-                let toPostedQuanity = parseFloat(item.postedquantity) + parseFloat(item.EnteredQuantity);
-                let obj = {
-                    "Ponumber": Ponumber,
-                    "LineItem": item.PurchaseOrderItem,
-                    "Material": item.Material,
-                    "Materialdesc": item.PurchaseOrderItemText,
-                    "Quantity":parseFloat(item.OrderQuantity).toFixed(2),
-                    "Postedquantity": parseFloat(toPostedQuanity).toFixed(2)
-                };
-                itemData.push(obj);
-            });
-            if (!isQuantityEntered) {
-                MessageToast.show("Enter Item Quantity");
-                return;
-            }
-            let payload = {
-                // "Asn":"abas",
-                "InvoiceNo": InvoiceNo,
-                "Ponumber": purchaseOrder,
-                "Plant": Plant,
-                "SystemDate": SystemDate,
-                "SystemTime": SystemTime,
-                "InvoiceDate": InvoiceDate, //"2024-12-29T00:00:00",
-                "Lrdate": (Lrdate !== "" ? Lrdate : null), //"2024-12-29T00:00:00",
-                "Lrnumber": Lrnumber,
-                "Vendor": Vendor,
-                "Ewayno": Ewayno,
-                "EwaybillDate": (EwayDate !== "" ? EwayDate : null),
-                "Amount": parseFloat(Amount).toFixed(2),
-                "Vehicleno": Vehicleno,
-                "Transporter": Transporter,
-                "Status": "01",
-                "to_Item": itemData
-            };
 
-            that.getView().setBusy(true);
-            this.inGateEntryModel.create("/InwardGateHeader", payload, {
-                method: "POST",
-                success: function (oData, oResponse) {
-                    that.getView().setBusy(false);
-                    let qrDataToPrintQRCode = oResponse.data;
-                    let qrData = oResponse.data;
-                    let gateEntryNo = qrData.AsnNo;
-                    console.log(oResponse);
-                    let oTable = that.getView().byId("idTable_RAPO");
-                    let aItems = oTable.getModel("AsnItemsModel").getProperty("/Results") || [];
-                    // 3️⃣ Prepare array of POST promises
-                    var aPostPromises = aItems.map(function (oItem) {
-                        return Models.updateforItems(that, oItem, "ItemforPo"); // must return a Promise
+            MessageBox.confirm("Are you sure you want to save this ASN?", {
+                title: "Confirm Save",
+                actions: [MessageBox.Action.YES, MessageBox.Action.NO],
+                emphasizedAction: MessageBox.Action.YES,
+                onClose: function (oAction) {
+                    if (oAction !== MessageBox.Action.YES) {
+                        return; // Exit if user cancels
+                    }
+                    let oDateFormat = DateFormat.getInstance({
+                        pattern: "yyyy-MM-dd'T'00:00:00"
                     });
-                    Promise.all(aPostPromises)
-                        .then(function (aResponses) {
-                            var dialog = new Dialog("idPrintQRDialog", {
-                                title: 'Success',
-                                type: 'Message',
-                                state: 'Success',
-                                content: new sap.m.Text({
-                                    text: `Asn  ${gateEntryNo} generated successfully`
-                                }),
-                                beginButton: new Button({
-                                    text: 'Download ASN',
-                                    press: function () {
-                                        that.onViewQR(qrData); //call function to download QR code
-                                        that.clearUIFields();
-                                        dialog.close();
-                                        that.onNavBack();
-                                    }
-                                }),
-                                afterClose: function () {
-                                    dialog.destroy();
-                                }
-                            });
-                            dialog.open();
+                    let SystemDate = oDateFormat.format(new Date(oView.byId("idRAPO_Date").getValue())),
+                        time = oView.byId("idRAPO_Time").getValue().split(":"),
+                        hours = time[0].length === 1 ? ('0' + time[0]) : time[0],
+                        SystemTime = `PT${hours}H${time[1]}M${time[1]}S`;
 
-                            dialog.attachBrowserEvent("keydown", function (oEvent) {
-                                if (oEvent.key === "Escape") {
-                                    //oEvent.preventDefault();
-                                    // that.onViewQR(qrDataToPrintQRCode); //call function to download QR code
-                                    that.clearUIFields();
-                                    dialog.close();
-                                    that.onNavBack();
+                    let InvoiceNo = that.getView().byId("idDocInvNo").getValue();
+                    let InvoiceDate = oDateFormat.format(oView.byId("idRAPO_InvDate").getDateValue()),
+                        Lrnumber = oView.byId("idRAPO_LR_No").getValue(),
+                        Lrdate = oDateFormat.format(oView.byId("idRAPO_LR_Date").getDateValue()),
+                        EwayDate = oDateFormat.format(oView.byId("idRAPO_EWAY_Date").getDateValue()),
+                        Ponumber = oView.byId("idRAPO_PO_Order").getValue(),
+                        Vendor = oView.byId("idSupplier").getText(),
+                        Ewayno = oView.byId("idRAPO_EwayNo").getValue(),
+                        Amount = oView.byId("idRAPO_Amount").getValue(),
+                        Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
+                        purchaseOrder = oView.byId("idRAPO_PO_Order").getValue(),
+                        Transporter = oView.byId("idRAPO_Trasporter").getValue();
+                    if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || EwayDate === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
+                        MessageToast.show("Fill all mandatory fields");
+                        return;
+                    }
+                    if (that.errorQuantity) {
+                        MessageToast.show("Enter a valid Quantity");
+                        return;
+                    }
+                    let isQuantityEntered = true;
+                    var itemData = [];
+                    that.getView().byId("idTable_RAPO").getModel("AsnItemsModel").getProperty("/Results").filter(item => {
+                        if (!item.EnteredQuantity) {
+                            isQuantityEntered = false;
+                        }
+                        let toPostedQuanity = parseFloat(item.postedquantity) + parseFloat(item.EnteredQuantity);
 
-                                }
+                        let obj = {
+                            "Ponumber": Ponumber,
+                            "LineItem": item.PurchaseOrderItem,
+                            "Material": item.Material,
+                            "Materialdesc": item.PurchaseOrderItemText,
+                            "Quantity": parseFloat(item.OrderQuantity).toFixed(2),
+                            "Postedquantity": parseFloat(toPostedQuanity).toFixed(2)
+                        };
+                        itemData.push(obj);
+                    });
+                    if (!isQuantityEntered) {
+                        MessageToast.show("Enter Item Quantity");
+                        return;
+                    }
+                    let payload = {
+                        // "Asn":"abas",
+                        "InvoiceNo": InvoiceNo,
+                        "Ponumber": purchaseOrder,
+                        "Plant": Plant,
+                        "SystemDate": SystemDate,
+                        "SystemTime": SystemTime,
+                        "InvoiceDate": InvoiceDate, //"2024-12-29T00:00:00",
+                        "Lrdate": (Lrdate !== "" ? Lrdate : null), //"2024-12-29T00:00:00",
+                        "Lrnumber": Lrnumber,
+                        "Vendor": Vendor,
+                        "Ewayno": Ewayno,
+                        "EwaybillDate": (EwayDate !== "" ? EwayDate : null),
+                        "Amount": parseFloat(Amount).toFixed(2),
+                        "Vehicleno": Vehicleno,
+                        "Transporter": Transporter,
+                        "Status": "01",
+                        "to_Item": itemData
+                    };
+
+                    that.getView().setBusy(true);
+                    that.inGateEntryModel.create("/InwardGateHeader", payload, {
+                        method: "POST",
+                        success: function (oData, oResponse) {
+                            that.getView().setBusy(false);
+                            let qrDataToPrintQRCode = oResponse.data;
+                            let qrData = oResponse.data;
+                            let gateEntryNo = qrData.AsnNo;
+                            console.log(oResponse);
+                            let oTable = that.getView().byId("idTable_RAPO");
+                            let aItems = oTable.getModel("AsnItemsModel").getProperty("/Results") || [];
+                            // 3️⃣ Prepare array of POST promises
+                            var aPostPromises = aItems.map(function (oItem) {
+                                return Models.updateforItems(that, oItem, "ItemforPo"); // must return a Promise
                             });
-                        }).catch(function (err) {
-                            that.getView().byId("idTable_RAPO").setBusy(false);
-                            sap.m.MessageToast.show("Error saving items");
-                            console.error(err);
-                        });
-                },
-                error: function (e) {
-                    that.getView().setBusy(false);
-                    if (e.responseText && (e.statusCode === 400 || e.statusCode === "400")) {
-                        var err = JSON.parse(e.responseText);
-                        var msg = err.error.message.value;
-                    } else if (e.responseText && (e.statusCode === 500 || e.statusCode === "500")) {
-                        var parser = new DOMParser();
-                        var xmlDoc = parser.parseFromString(e.responseText, "text/xml");
-                        var msg = xmlDoc.documentElement.childNodes[1].innerHTML;
-                    } else {
-                        var msg = e.message;
-                    }
-                    var bCompact = !!that.getView().$().closest(".sapUiSizeCompact").length;
-                    MessageBox.error(
-                        msg, {
-                        styleClass: bCompact ? "sapUiSizeCompact" : ""
-                    }
-                    );
+                            Promise.all(aPostPromises)
+                                .then(function (aResponses) {
+                                    var dialog = new Dialog("idPrintQRDialog", {
+                                        title: 'Success',
+                                        type: 'Message',
+                                        state: 'Success',
+                                        content: new sap.m.Text({
+                                            text: `Asn  ${gateEntryNo} generated successfully`
+                                        }),
+                                        beginButton: new Button({
+                                            text: 'Download ASN',
+                                            press: function () {
+                                                that.onViewQR(qrData); //call function to download QR code
+                                                dialog.close();
+                                            }
+                                        }),
+                                        afterClose: function () {
+                                            dialog.destroy();
+                                        }
+                                    });
+                                    dialog.open();
+
+                                    dialog.attachBrowserEvent("keydown", function (oEvent) {
+                                        if (oEvent.key === "Escape") {
+                                            oEvent.preventDefault();
+                                            that.onViewQR(qrDataToPrintQRCode);
+                                            dialog.close();
+
+                                        }
+                                    });
+                                }).catch(function (err) {
+                                    that.getView().byId("idTable_RAPO").setBusy(false);
+                                    sap.m.MessageToast.show("Error saving items");
+                                    console.error(err);
+                                });
+                        },
+                        error: function (e) {
+                            that.getView().setBusy(false);
+                            if (e.responseText && (e.statusCode === 400 || e.statusCode === "400")) {
+                                var err = JSON.parse(e.responseText);
+                                var msg = err.error.message.value;
+                            } else if (e.responseText && (e.statusCode === 500 || e.statusCode === "500")) {
+                                var parser = new DOMParser();
+                                var xmlDoc = parser.parseFromString(e.responseText, "text/xml");
+                                var msg = xmlDoc.documentElement.childNodes[1].innerHTML;
+                            } else {
+                                var msg = e.message;
+                            }
+                            var bCompact = !!that.getView().$().closest(".sapUiSizeCompact").length;
+                            MessageBox.error(
+                                msg, {
+                                styleClass: bCompact ? "sapUiSizeCompact" : ""
+                            }
+                            );
+                        }
+                    });
                 }
-            });
+            })
         },
 
         onViewQR: function (qrData) {
@@ -1418,6 +1434,8 @@ sap.ui.define([
                     // After generating the QR Code, create PDF
                     that._generatePDF(qrData);
                     oQRCodeBox.setVisible(false);
+                    that.clearUIFields();
+                                                
                 }.bind(this));
             }, 200);
         },
@@ -1440,10 +1458,9 @@ sap.ui.define([
             doc.setFontSize(4.5);
             doc.setTextColor('#000');
 
-            doc.text(2, 5, `Asn No.: ${qrData.AsnNo}`);
-            doc.text(2, 9, `QR Code/ASN: ${qrData.GateEntryId}`);
-            doc.text(2, 13, `Inv No.: ${qrData.InvoiceNo}`);
-            doc.text(2, 17, `Inv Date: ${formattedInvDate}`);
+            doc.text(2, 5, `ASN Number.: ${qrData.AsnNo}`);
+            doc.text(2, 9, `Invoice Number.: ${qrData.InvoiceNo}`);
+            doc.text(2, 13, `Invoice Date: ${formattedInvDate}`);
 
             // Get the canvas element for the QR code
             var canvas = document.getElementById('qrCanvas');
@@ -1451,8 +1468,7 @@ sap.ui.define([
 
             // Add the QR code image to the PDF
             doc.addImage(imgData, 'PNG', 35, 1, 15, 15); // Adjust size and position as necessary
-            doc.text(33, 18, `Gt Date: ${formattedSystemDate}`);
-
+            doc.text(2, 17, `Supplier: ${qrData.Vendor}`);
             // Save the PDF to a file
             doc.save(`ASN_${qrData.AsnNo}.pdf`);
         },
@@ -1478,6 +1494,7 @@ sap.ui.define([
             let tModel = new sap.ui.model.json.JSONModel([]);
             oView.byId("idTable_RAPO").setModel(tModel);
             //oView.byId("idPanelChallan").setVisible(false);
+            this.onNavFirstPage();
         },
 
         onCancelGateEntry: function () {
@@ -1940,6 +1957,157 @@ sap.ui.define([
                 this.oUploadPluginInstance.openFilePreview(oBindingContext);
             }
         },
+        _loadDocuments: async function () {
+            try {
+                const oModel = this.getOwnerComponent().getModel("catModel");
+                const aFiles = await oModel.read("/Files"); // adjust for V2 if needed
+
+                this.getView().getModel("documents").setProperty("/items", aFiles.results || aFiles.value || []);
+            } catch (err) {
+                MessageBox.error("Failed to load files: " + err.message);
+            }
+        },
+
+        /** 🔹 Before Upload - attach metadata */
+        onBeforeUploadStarts: function (oEvent) {
+            const oItem = oEvent.getParameter("item");
+            const fileName = oItem.getFileName();
+
+            // Add "slug" header to pass filename
+            oItem.addHeaderParameter(new UploadCollectionParameter({
+                name: "slug",
+                value: fileName
+            }));
+        },
+
+        /** 🔹 After upload */
+        onUploadCompleted: function (oEvent) {
+            MessageToast.show("Upload completed");
+            this._loadDocuments();
+        },
+
+        /** 🔹 Download selected files */
+        onDownloadFiles: async function () {
+            const oTable = this.byId("table-uploadSet");
+            const aSelected = oTable.getSelectedItems();
+
+            if (!aSelected.length) {
+                MessageToast.show("No file selected");
+                return;
+            }
+
+            const oModel = this.getOwnerComponent().getModel("catModel");
+
+            for (let oItem of aSelected) {
+                const fileId = oItem.getBindingContext("documents").getProperty("ID");
+
+                try {
+                    const url = await oModel.callFunction("/downloadFile", {
+                        method: "POST",
+                        urlParameters: { ID: fileId }
+                    });
+
+                    URLHelper.redirect(url, true);
+                } catch (err) {
+                    MessageBox.error("Download failed: " + err.message);
+                }
+            }
+        },
+
+        /** 🔹 Delete handler */
+        onRemoveHandler: async function (oEvent) {
+            const fileId = oEvent.getSource().getBindingContext("documents").getProperty("ID");
+
+            const oModel = this.getOwnerComponent().getModel("catModel");
+
+            try {
+                await oModel.callFunction("/deleteFile", {
+                    method: "POST",
+                    urlParameters: { ID: fileId }
+                });
+
+                MessageToast.show("File deleted");
+                this._loadDocuments();
+            } catch (err) {
+                MessageBox.error("Delete failed: " + err.message);
+            }
+        },
+
+        /** 🔹 Search in documents table */
+        onSearch: function (oEvent) {
+            const sQuery = oEvent.getParameter("newValue") || "";
+            const oTable = this.byId("table-uploadSet");
+            const oBinding = oTable.getBinding("items");
+
+            const aFilters = [];
+            if (sQuery) {
+                aFilters.push(new sap.ui.model.Filter("fileName", sap.ui.model.FilterOperator.Contains, sQuery));
+            }
+
+            oBinding.filter(aFilters);
+        },
+
+        /** 🔹 Selection change (enable/disable download button) */
+        onSelectionChange: function (oEvent) {
+            const oTable = this.byId("table-uploadSet");
+            const aSelected = oTable.getSelectedItems();
+            this.byId("downloadSelectedButton").setEnabled(aSelected.length > 0);
+        },
+
+        /** 🔹 File preview */
+        openPreview: function (oEvent) {
+            const sFileName = oEvent.getSource().getText();
+            MessageToast.show("Preview clicked for " + sFileName);
+            // Optional: Implement inline preview via iframe/pdf viewer
+        },
+
+        /** 🔹 Formatter - file size */
+        getFileSizeWithUnits: function (iSize) {
+            if (!iSize) return "0 KB";
+            let sUnit = "Bytes";
+            let iCalc = iSize;
+
+            if (iSize > 1024) {
+                iCalc = (iSize / 1024).toFixed(1);
+                sUnit = "KB";
+            }
+            if (iSize > 1024 * 1024) {
+                iCalc = (iSize / (1024 * 1024)).toFixed(1);
+                sUnit = "MB";
+            }
+            return iCalc + " " + sUnit;
+        },
+
+        /** 🔹 Formatter - icon based on MIME type */
+        getIconSrc: function (sMimeType, sFileName) {
+            if (!sMimeType && sFileName) {
+                const sExt = sFileName.split(".").pop().toLowerCase();
+                if (sExt === "pdf") return "sap-icon://pdf-attachment";
+                if (["png", "jpg", "jpeg"].includes(sExt)) return "sap-icon://attachment-photo";
+                return "sap-icon://document";
+            }
+            if (sMimeType && sMimeType.startsWith("image/")) return "sap-icon://attachment-photo";
+            if (sMimeType === "application/pdf") return "sap-icon://pdf-attachment";
+            return "sap-icon://document";
+        },
+        checkQuantityInputErrors: function () {
+            let oTable = this.getView().byId("idTable_RAPO");
+            let bHasError = false;
+
+            // Loop through all visible items in the table
+            oTable.getItems().forEach(function (oItem) {
+                // Find the Input field inside each row
+                let oInput = oItem.getCells().find(control => control.getId().includes("idInpRAPOItemQuantity"));
+
+                if (oInput && oInput.getValueState() === "Error") {
+                    bHasError = true;
+                }
+            });
+
+            return bHasError;
+        }
+
+
 
     });
 });

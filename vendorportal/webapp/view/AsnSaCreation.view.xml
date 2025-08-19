@@ -3,10 +3,15 @@
     xmlns:fb="sap.ui.comp.filterbar"
     xmlns:core="sap.ui.core"
     xmlns:u="sap.ui.unified"
+    xmlns:svm="sap.ui.comp.smartvariants"
     xmlns="sap.m"
     xmlns:f="sap.f"
+    xmlns:mdc="sap.ui.mdc"
+    xmlns:mdct="sap.ui.mdc.table"
+    xmlns:vm="sap.ui.fl.variants"
+    xmlns:Table1="sap.ui.mdc.table.Table"
     xmlns:upload="sap.m.upload"
-    xmlns:svm="sap.ui.comp.smartvariants">
+    xmlns:mdcat="sap.ui.mdc.actiontoolbar">
     <!-- <Page id="asnsaCreationpage" title="{i18n>title}" showFooter="true" titleAlignment="Auto" showNavButton="true" navButtonPress="onNavBack"> -->
     <f:DynamicPage id="_IDGenDynamicPage" headerExpanded="{/headerExpanded}" showFooter="true" fitContent="true">
         <f:title>
@@ -34,7 +39,7 @@
                 <f:content>
                     <HBox id="_IDGenHBox9">
                         <VBox id="_IDGenVBox29" width="20%">
-                            <Label id="_IDGenLabel38" text="Doc./Inv. No" required="true"/>
+                            <Label id="_IDGenLabel38" text="Invoice Number" required="true"/>
                             <Input id="idDocInvNo" value="" change="onChangeDocInvNo" maxLength="16" width="75%"/>
                         </VBox>
 
@@ -58,7 +63,7 @@
                     <HBox id="_IDGenHBox10" class="sapUiTinyMarginTop">
 
                         <VBox id="_IDGenVBox30" width="20%">
-                            <Label id="_IDGenLabel39" text="Invoice/DC Date" required="true"/>
+                            <Label id="_IDGenLabel39" text="Invoice Date" required="true"/>
                             <DatePicker id="idRAPO_InvDate" width="75%" placeholder="Select Date" displayFormat="yyyy-MM-dd" enabled="true" class="sapUiSmallMarginBottom"/>
                         </VBox>
                         <VBox id="_IDGenVBox31" width="20%">
@@ -95,7 +100,7 @@
                         </VBox>
                         <VBox id="_IDGenVBox112" width="20%" visible="false">
                             <Label id="_IDGenLabel112" text="Supplier"/>
-                            <Text id="idSupplier" text="{RoutePoData>/PoHeader/Supplier}" class="sapUiSmallMarginBottom"/>
+                            <Text id="idSupplier" text="{RouteSaData>/SaHeader/Supplier}" class="sapUiSmallMarginBottom"/>
                         </VBox>
                     </HBox>
 
@@ -116,7 +121,7 @@
                                     </OverflowToolbar>
                                 </headerToolbar>
                                 <columns>
-                                    <Column id="_IDGenColumn">
+                                    <Column id="_IDGenColumn" visible="false">
                                         <Text id="_IDGenText" text="PO No. / SA No." />
                                     </Column>
                                     <Column id="_IDGenColumn1">
@@ -166,18 +171,18 @@
                         <Table id="table-uploadSet" class="sapUiNoContentPadding" sticky="ColumnHeaders,HeaderToolbar" width="auto" mode="MultiSelect" fixedLayout="false" inset="true" autoPopinMode="true" hiddenInPopin="None" items="{path: 'documents>/items', templateShareable: false}" selectionChange="onSelectionChange">
 
                             <headerToolbar>
-                                <OverflowToolbar id="_IDGenOverflowToolbar7">
-                                    <Title id="_IDGenTitle9" text="Documents ({= ${documents>/items}.length})" level="H2" />
-                                    <ToolbarSpacer id="_IDGenToolbarSpacer3" />
+                                <OverflowToolbar>
+                                    <Title text="Documents ({= ${documents>/items}.length})" level="H2" />
+                                    <ToolbarSpacer />
 
-                                    <SearchField id="_IDGenSearchField" width="20%" liveChange="onSearch">
+                                    <SearchField width="20%" liveChange="onSearch">
                                         <layoutData>
-                                            <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData" priority="NeverOverflow" />
+                                            <OverflowToolbarLayoutData priority="NeverOverflow" />
                                         </layoutData>
                                     </SearchField>
-                                    <ToolbarSeparator id="_IDGenToolbarSeparator" />
+                                    <ToolbarSeparator />
 
-                                    <!-- Use the UploadButtonPlaceholder to add the UploadButton to the toolbar -->
+                                    <!-- Upload Button Placeholder (UI5 UploadSet integration) -->
                                     <upload:ActionsPlaceholder id="uploadButton" placeholderFor="UploadButtonPlaceholder" />
 
                                     <Button id="downloadSelectedButton" text="Download" enabled="false" press="onDownloadFiles" />
@@ -185,58 +190,56 @@
                             </headerToolbar>
 
                             <dependents>
-                                <plugins.UploadSetwithTable uploadUrl="/uploadFiles" multiple="true" beforeUploadStarts="onBeforeUploadStarts" itemRenamed="onDocumentRenamedSuccess" uploadCompleted="onUploadCompleted" onActivated="onPluginActivated" cloudFilePickerEnabled="true" actions="uploadButton">
+                                <plugins.UploadSetwithTable id="uploadSetTablePlugin" uploadUrl="/catalog/CatService/uploadFile" multiple="true" beforeUploadStarts="onBeforeUploadStarts" itemRenamed="onDocumentRenamedSuccess" uploadCompleted="onUploadCompleted" onActivated="onPluginActivated" cloudFilePickerEnabled="true" actions="uploadButton">
+
                                     <rowConfiguration>
-                                        <upload.UploadItemConfiguration fileNamePath="fileName" mediaTypePath="mediaType" urlPath="url" previewablePath="previewable" fileSizePath="fileSize" isTrustedSourcePath="trustedSource" />
+                                        <upload.UploadItemConfiguration fileNamePath="fileName" mediaTypePath="mimeType" urlPath="url" previewablePath="previewable" fileSizePath="fileSize" isTrustedSourcePath="trustedSource" />
                                     </rowConfiguration>
                                 </plugins.UploadSetwithTable>
                             </dependents>
 
                             <columns>
-                                <Column id="fileName" importance="High">
+                                <Column importance="High">
                                     <header>
-                                        <Label id="_IDGenLabel1" text="File Name" />
+                                        <Label text="File Name" />
                                     </header>
                                 </Column>
-
-                                <Column id="fileSize">
+                                <Column>
                                     <header>
-                                        <Label id="_IDGenLabel30" text="File Size" />
+                                        <Label text="File Size" />
                                     </header>
                                 </Column>
-                                <Column id="lastModified">
+                                <Column>
                                     <header>
-                                        <Label id="_IDGenLabel46" text="Last Modified" />
+                                        <Label text="Last Modified" />
                                     </header>
                                 </Column>
-                                <Column id="actionButton" importance="High" />
+                                <Column importance="High" />
                             </columns>
 
-
                             <items>
-                                <ColumnListItem id="_IDGenColumnListItem4" highlight="{= ${documents>uploadState} === 'Complete' ? 'Indication05' : null }">
-
-                                    <!-- Cells with cell template defining content for each column (cells and columns work with 1:1 mapping) -->
+                                <ColumnListItem highlight="{= ${documents>uploadState} === 'Complete' ? 'Indication05' : null }">
                                     <cells>
-                                        <HBox id="_IDGenHBox6">
-                                            <Image id="_IDGenImage" src="{documents>imageUrl}" class="sapMUSTItemImage sapMUSTItemIcon" visible="{= ${documents>imageUrl} !== undefined}" />
-                                            <core:Icon id="_IDGenIcon" src="{parts: ['documents>mediaType', 'documents>fileName'], formatter: '.getIconSrc' }" visible="{= ${documents>imageUrl} === undefined || ${documents>imageUrl} === '' }" class="sapMUSTItemImage sapMUSTItemIcon" />
-                                            <VBox id="_IDGenVBox37" class="sapUiTinyMargin sapUiSmallMarginBegin">
-                                                <Link id="_IDGenLink" text="{documents>fileName}" press="openPreview" class="sapUiTinyMarginBottom" />
-                                                <Text id="_IDGenText75" text="{documents>documentType}" />
+                                        <HBox>
+                                            <Image src="{documents>imageUrl}" class="sapMUSTItemImage sapMUSTItemIcon" visible="{= ${documents>imageUrl} !== undefined}" />
+                                            <core:Icon src="{parts: ['documents>mimeType', 'documents>fileName'], formatter: '.getIconSrc'}" visible="{= ${documents>imageUrl} === undefined || ${documents>imageUrl} === '' }" class="sapMUSTItemImage sapMUSTItemIcon" />
+                                            <VBox class="sapUiTinyMargin sapUiSmallMarginBegin">
+                                                <Link text="{documents>fileName}" press="openPreview" class="sapUiTinyMarginBottom" />
+                                                <Text text="{documents>documentType}" />
                                             </VBox>
                                         </HBox>
 
-                                        <Text id="_IDGenText76" text="{parts: ['documents>fileSize'], formatter: '.getFileSizeWithUnits'}" />
-                                        <VBox id="_IDGenVBox38">
-                                            <Text id="_IDGenText77" text="{documents>lastModifiedBy}" />
-                                            <Text id="_IDGenText78" class="sapUiTinyMarginTop" text="{documents>lastmodified}" />
+                                        <Text text="{parts: ['documents>fileSize'], formatter: '.getFileSizeWithUnits'}" />
+                                        <VBox>
+                                            <Text text="{documents>lastModifiedBy}" />
+                                            <Text class="sapUiTinyMarginTop" text="{documents>lastModified}" />
                                         </VBox>
-                                        <Button id="_IDGenButton25" class="sapUiTinyMarginBegin" type="Transparent" icon="sap-icon://delete" press="onRemoveHandler" />
+                                        <Button class="sapUiTinyMarginBegin" type="Transparent" icon="sap-icon://delete" press="onRemoveHandler" />
                                     </cells>
                                 </ColumnListItem>
                             </items>
                         </Table>
+
                     </IconTabFilter>
                 </items>
             </IconTabBar>

@@ -4,8 +4,9 @@ sap.ui.define([
     "hodek/vendorportal/utils/Formatter",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/date/UI5Date",
-    'sap/ui/model/json/JSONModel'
-], (Controller, Models, Formatter, DateFormat, UI5Date, JSONModel) => {
+    'sap/ui/model/json/JSONModel',
+    "sap/m/MessageBox"
+], (Controller, Models, Formatter, DateFormat, UI5Date, JSONModel,MessageBox) => {
     "use strict";
     //QR & PDF in use libraries //
     //QR & PDF in use libraries //
@@ -74,7 +75,7 @@ sap.ui.define([
         loadPurchaseOrderFilter: function () {
             // Load PO data and build company code model
             let _this = this;
-            this.oBusyDialog.setText("Setting Table..");
+            this.oBusyDialog.setText("Loading Data..");
             this.oBusyDialog.open()
             Models._loadAsn(this, this.sQuery, this.iSkip, this.iTop)
                 .then(function (aResults) {
@@ -101,11 +102,11 @@ sap.ui.define([
             oButton.setEnabled(aSelectedItems.length > 0);
         },
         formatter: Formatter,
-        onSearch: function (oEvent) {
-            const oView = this.getView();
-            const oModel = this.getOwnerComponent().getModel("vendorModel"); // OData model
-            const oTableModel = this.getOwnerComponent().getModel("TableModelPO"); // Target model for results
-            const oFilterModel = this.getOwnerComponent().getModel("FilterModel");
+        onFilterGo: function (oEvent) {
+            this.iSkip = 0;
+            this.iTop = 200; // page size
+            this.sQuery = "onFilterGo";
+            this.getOwnerComponent().getModel("AsnHeaderModel").setProperty("/AsnData", "");
             this.loadPurchaseOrderFilter();
 
         },
@@ -200,13 +201,13 @@ sap.ui.define([
         },
 
         onAsnSearch: function (oEvent) {
-            let sQuery = oEvent.getParameter("value")?.trim().toLowerCase();
-            this._poSearchQuery = sQuery;
+            let sQuery = oEvent.getParameter("query").toLowerCase();
+            this.sQuery = sQuery;
             this._poSkip = 0;
             this._poHasMore = true;
 
-            const oModel = this.getView().getModel("AsnModelVh");
-            const aAllPo = oModel.getProperty("/AsnNumbers") || [];
+            const oModel = this.getView().getModel("AsnHeaderModel");
+            const aAllPo = oModel.getProperty("/AsnData") || [];
 
             // Filter existing local data
             const aFilteredPo = aAllPo.filter(item =>
@@ -217,173 +218,15 @@ sap.ui.define([
 
             if (aFilteredPo.length > 0) {
                 // Use filtered data from local cache
-                this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["AsnNo", "Plant", "InvoiceNo"]);
-
+                // this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["AsnNo", "Plant", "InvoiceNo"]);
+                this._applySearchFilter(sQuery);
             } else {
-                this._oPoDialog.setBusy(true);
-                Models._loadAsn(this, sQuery, 0, 2000)
-                    .then(() => {
-                        this._oPoDialog.setBusy(false); // ✅ Stop busy after success
-                    })
-                    .catch((oError) => {
-                        this._oPoDialog.setBusy(false); // ✅ Also stop busy on error
-                        console.error("Failed to load Purchase Orders:", oError);
-                    });
-            }
-        },
-        onAsnConfirm: function (oEvent) {
-            let aSelectedContexts = oEvent.getParameter("selectedContexts");
-            let oMultiInput = this.byId("idPoNumber");
-            let oInputSupplier = this.byId("idPoSupplier");
-            let oInputPurchaseGrp = this.byId("idPoPurchGroup");
-            let oInputPlant = this.byId("idFilterPlant");
-            oInputSupplier.removeAllTokens();
-            oInputPurchaseGrp.removeAllTokens();
-            oMultiInput.removeAllTokens();
-            oInputPlant.removeAllTokens();
-
-            if (aSelectedContexts && aSelectedContexts.length) {
-                aSelectedContexts.forEach(function (oContext) {
-                    let oData = oContext.getObject();
-                    oMultiInput.addToken(new sap.m.Token({
-                        key: oData.PurchaseOrder,
-                        text: oData.PurchaseOrder
-                    }));
-                    oInputSupplier.addToken(new sap.m.Token({
-                        key: oData.Supplier,
-                        text: oData.Supplier
-                    }));
-                    oInputPurchaseGrp.addToken(new sap.m.Token({
-                        key: oData.PurchasingGroup,
-                        text: oData.PurchasingGroup
-                    }));
-                    oInputPlant.addToken(new sap.m.Token({
-                        key: oData.Plant,
-                        text: oData.Plant
-                    }));
-                });
+                this.iSkip = 0;
+                this.iTop = 200; // page size
+                this.loadPurchaseOrderFilter();
             }
         },
 
-        onPurchasingGroupValueHelp: function () {
-            let oView = this.getView();
-
-            if (!this._oPgDialog) {
-                this._oPgDialog = sap.ui.xmlfragment("hodek.vendorportal.fragments.PurchasingGroupValueHelp", this);
-                oView.addDependent(this._oPgDialog);
-            }
-            this._oPgDialog.open();
-        },
-        onPurchasingGroupSearch: function (oEvent) {
-            let sQuery = oEvent.getParameter("value")?.trim().toLowerCase();
-            this._pgSearchQuery = sQuery;
-            this._pgSkip = 0;
-            this._pgHasMore = true;
-            const oModel = this.getView().getModel("PgModelVh");
-            const aAllPurchaseGroup = oModel.getProperty("/PurchasingGroups") || [];
-
-
-            // Use filtered data from local cache
-            this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["PurchaseOrder", "PurchasingGroup", "Supplier"]);
-
-
-        },
-        onPurchasingGroupConfirm: function (oEvent) {
-            let aSelectedContexts = oEvent.getParameter("selectedContexts");
-            let oMultiInput = this.byId("idPoPurchGroup");
-            oMultiInput.removeAllTokens();
-
-            if (aSelectedContexts && aSelectedContexts.length) {
-                aSelectedContexts.forEach(function (oContext) {
-                    let oData = oContext.getObject();
-                    oMultiInput.addToken(new sap.m.Token({
-                        key: oData.PurchasingGroup,
-                        text: oData.PurchasingGroup
-                    }));
-                });
-            }
-        },
-
-        onPlantValueHelp: function () {
-            let oView = this.getView();
-
-            if (!this._oPlantDialog) {
-                this._oPlantDialog = sap.ui.xmlfragment("hodek.vendorportal.fragments.PlantValueHelp", this);
-                oView.addDependent(this._oPlantDialog);
-            }
-
-            this._plantSearchQuery = "";
-            this._plantSkip = 0;
-            this._plantHasMore = true;
-            this._plantDialogOpened = false;
-            this._plantInitialLoadDone = false;
-
-            this._oPlantDialog.setBusy(true);
-
-            Models._loadPlants(this, "", 0, 2000, (aData) => {
-                const uniqueResults = aData.results.filter((item, index, self) =>
-                    index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-                );
-                let oModel = this.getView().getModel("PlantModelVh");
-                oModel.setProperty("/Plants", uniqueResults);
-                this._plantSkip += aData.length;
-                this._plantDialogOpened = true;
-                this._plantInitialLoadDone = true;
-                this._oPlantDialog.setBusy(false);
-                this._oPlantDialog.open();
-            });
-        },
-        onPlantSearch: function (oEvent) {
-            let sQuery = oEvent.getParameter("value")?.trim().toLowerCase();
-            this._plantSearchQuery = sQuery;
-            this._plantSkip = 0;
-            this._plantHasMore = true;
-
-            const oModel = this.getView().getModel("PlantModelVh");
-            const aAllPlants = oModel.getProperty("/Plants") || [];
-
-            // Filter existing local data
-            const aFilteredPlants = aAllPlants.filter(item =>
-                Object.values(item).some(val =>
-                    String(val).toLowerCase().includes(sQuery)
-                )
-            );
-
-            if (aFilteredPlants.length > 0) {
-                // Use filtered data from local cache
-                this.applyDynamicFilter(oEvent.getSource().getBinding("items"), sQuery, ["PlantName", "Plant"]);
-
-            } else {
-                // Fallback: hit the service
-                this._oPlantDialog.setBusy(true);
-
-                Models._loadPlants(this, sQuery, 0, 2000, (aData) => {
-                    const uniqueResults = aData.results.filter((item, index, self) =>
-                        index === self.findIndex(t => JSON.stringify(t) === JSON.stringify(item))
-                    );
-
-                    oModel.setProperty("/Plants", uniqueResults);
-                    this._plantSkip += aData.length;
-                    this._plantHasMore = aData.length === 2000;
-                    this._oPlantDialog.setBusy(false);
-                });
-            }
-        },
-        onPlantConfirm: function (oEvent) {
-            let aSelectedContexts = oEvent.getParameter("selectedContexts");
-            let oMultiInput = this.byId("idFilterPlant");
-            oMultiInput.removeAllTokens();
-
-            if (aSelectedContexts && aSelectedContexts.length) {
-                aSelectedContexts.forEach(function (oContext) {
-                    let oData = oContext.getObject();
-                    oMultiInput.addToken(new sap.m.Token({
-                        key: oData.Plant,
-                        text: oData.PlantName
-                    }));
-                });
-            }
-        },
         applyDynamicFilter: function (oBinding, sQuery, aFieldNames) {
             let aFilters = aFieldNames.map(sField =>
                 new sap.ui.model.Filter(sField, sap.ui.model.FilterOperator.Contains, sQuery)
@@ -395,10 +238,6 @@ sap.ui.define([
             });
 
             oBinding.filter([oCombinedFilter]);
-        },
-        onLiveChange: function (oEvent) {
-            var sQuery = oEvent.getParameter("newValue");
-            this._applySearchFilter(sQuery);
         },
 
         onSearchAsn: function (oEvent) {
@@ -415,6 +254,7 @@ sap.ui.define([
                 var aFilters = [
                     new sap.ui.model.Filter("AsnNo", sap.ui.model.FilterOperator.Contains, sQuery),
                     new sap.ui.model.Filter("InvoiceNo", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("Plant", sap.ui.model.FilterOperator.Contains, sQuery),
                 ];
 
                 var oFilter = new sap.ui.model.Filter({
@@ -467,11 +307,24 @@ sap.ui.define([
                 sap.m.MessageToast.show("Please enter a remark.");
                 return;
             }
-            this.pRemarkDialog.setBusy(true);
-            Models.updateAsnStatus(this, oData.SelectedASN, oData.Remark, this.pRemarkDialog);
-            // Here you can call your backend API with oData.SelectedASN & oData.Remark
+            let that=this;
+            // Show confirmation dialog
+            MessageBox.confirm(`Are you sure to Cancel ASN No : ${oData.SelectedASN} ?`, {
+                title: "Confirm Cancellation",
+                actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
+                emphasizedAction: sap.m.MessageBox.Action.YES,
+                onClose: function (sAction) {
+                    if (sAction === sap.m.MessageBox.Action.YES) {
+                        this.pRemarkDialog.setBusy(true);
 
-            this.pRemarkDialog.close();
+                        // Call your backend method
+                        Models.updateAsnStatus(this, oData.SelectedASN, oData.Remark, this.pRemarkDialog);
+
+                        this.pRemarkDialog.close();
+                    }
+                }.bind(this) // bind 'this' to access controller context
+            });
+
         },
 
         onCancelRemark: function () {

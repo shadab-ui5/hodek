@@ -7,15 +7,28 @@
     xmlns:svm="sap.ui.comp.smartvariants">
 
     <Page id="reprintpage" showHeader="false" title="Vendor Portal" showFooter="true" titleAlignment="Auto" showNavButton="false" navButtonPress="onNavBack">
-        <fb:FilterBar id="filterbar" useToolbar="false" search=".onSearch" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
+        <fb:FilterBar id="filterbar" useToolbar="false" search=".onFilterGo" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad">
             <fb:filterGroupItems>
-
                 <!-- 🔍 Search Field -->
-                <fb:FilterGroupItem id="_IDGenFilterGroupItem8" name="Search" label="Search" groupName="Group1" visibleInFilterBar="true">
+                <fb:FilterGroupItem id="_IDGenFilterGroupItem11"  name="Search" label="Search" groupName="Group1" visibleInFilterBar="true">
                     <fb:control>
-                        <SearchField id="searchField" width="90%" class="" placeholder="Search..."  search=".onSearchAsn" />
-
+                        <SearchField id="searchField" width="90%" class="" placeholder="Search..."  search=".onAsnSearch" />
                     </fb:control>
+                </fb:FilterGroupItem>
+                <fb:FilterGroupItem id="_IDGenFilterGroupItem15" name="asn" label="ASN No" groupName="Group1" visibleInFilterBar="true">
+                    <fb:control>
+                        <Input id="asnField" width="90%" class="" placeholder="ASN..."  />
+                    </fb:control>
+                </fb:FilterGroupItem>
+                <fb:FilterGroupItem id="_IDGenFilterGroupItem16" name="invoice" label="Invoice No" groupName="Group1" visibleInFilterBar="true">
+                    <fb:control>
+                        <Input id="invoiceField" width="90%" class="" placeholder="Invoice..."  />
+                    </fb:control>
+                </fb:FilterGroupItem>
+                <fb:FilterGroupItem id="_IDGenFilterGroupItem17" name="invoiceDate" label="Invoice Date" groupName="Group1" visibleInFilterBar="true">
+                    <fb:control>
+                            <DateRangeSelection id="idprintPurchDate" class="DRS1" displayFormat="yyyy-MM-dd" change="handleChange"/>
+                        </fb:control>
                 </fb:FilterGroupItem>
             </fb:filterGroupItems>
 
@@ -38,7 +51,7 @@
                     <Text id="_IDGenText" text="ASN No." />
                 </Column>
                 <Column id="_IDGenColumn" minScreenWidth="Tablet" demandPopin="true">
-                    <Text id="_IDGenText2" text="Invoice" />
+                    <Text id="_IDGenText2" text="Invoice Number" />
                 </Column>
                 <Column id="_IDGenColumn1" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
                     <Text id="_IDGenText3" text="Invoice Date" />

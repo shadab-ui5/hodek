@@ -78,7 +78,7 @@
                         <Column id="_IDGenColumn22">
                             <Text id="_IDGenText57" text="Item" />
                         </Column>
-                        <Column id="_IDGenColumn23">
+                        <Column id="_IDGenColumn23" visible="false">
                             <Text id="_IDGenText58" text="Plant" />
                         </Column>
                         <Column id="_IDGenColumn24">
