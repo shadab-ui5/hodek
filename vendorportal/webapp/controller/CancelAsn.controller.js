@@ -6,7 +6,7 @@ sap.ui.define([
     "sap/ui/core/date/UI5Date",
     'sap/ui/model/json/JSONModel',
     "sap/m/MessageBox"
-], (Controller, Models, Formatter, DateFormat, UI5Date, JSONModel,MessageBox) => {
+], (Controller, Models, Formatter, DateFormat, UI5Date, JSONModel, MessageBox) => {
     "use strict";
     //QR & PDF in use libraries //
     //QR & PDF in use libraries //
@@ -18,8 +18,10 @@ sap.ui.define([
             oRouter.getRoute("RouteScheduleAgreeOrder").attachPatternMatched(this._onRouteMatched, this);
             this.oBusyDialog = new sap.m.BusyDialog({ text: "Loading data..." });
             this.oBusyDialog.open();
+            this.bFirstLoadDone = false; // 🚩 Flag to control first load
+            this.bHasMoreData = true;
             this.iSkip = 0;
-            this.iTop = 20; // page size
+            this.iTop = 200; // page size
             this.sQuery = ""; // store current search query
             let that = this;
             const oAsnModelVh = new sap.ui.model.json.JSONModel();
@@ -80,13 +82,13 @@ sap.ui.define([
             Models._loadAsn(this, this.sQuery, this.iSkip, this.iTop)
                 .then(function (aResults) {
                     let oAsnModel = _this.getOwnerComponent().getModel("AsnHeaderModel");
-                    let aExisting = oAsnModel.getProperty("/AsnData") || [];
+                    let aExisting = oAsnModel.setProperty("/AsnData", aResults) || [];
 
-                    // Append instead of overwrite
-                    oAsnModel.setProperty("/AsnData", aExisting.concat(aResults));
+                    // // Append instead of overwrite
+                    // oAsnModel.setProperty("/AsnData", aExisting.concat(aResults));
 
-                    // Update skip for next load
-                    _this.iSkip += aResults.length;
+                    // // Update skip for next load
+                    // _this.iSkip += aResults.length;
                     _this.oBusyDialog.close();
                 })
                 .catch(function () {
@@ -307,7 +309,7 @@ sap.ui.define([
                 sap.m.MessageToast.show("Please enter a remark.");
                 return;
             }
-            let that=this;
+            let that = this;
             // Show confirmation dialog
             MessageBox.confirm(`Are you sure to Cancel ASN No : ${oData.SelectedASN} ?`, {
                 title: "Confirm Cancellation",
@@ -329,7 +331,42 @@ sap.ui.define([
 
         onCancelRemark: function () {
             this.pRemarkDialog.close();
-        }
+        },
+        onUpdateStartPoHeaderTable: function (oEvent) {
+            // Skip first automatic trigger
+            if (!this.bFirstLoadDone) {
+                this.bFirstLoadDone = true;
+                return;
+            }
+
+            // Check if it's really a scroll (reason = Growing)
+            if (oEvent.getParameter("reason") === "Growing" && this.bHasMoreData) {
+                this.loadMoreData();
+            }
+        },
+
+        loadMoreData: function () {
+            let _this = this;
+            this.oBusyDialog.setText("Loading more data...");
+            this.oBusyDialog.open();
+
+            Models._loadAsn(this, this.sQuery, this.iSkip, this.iTop)
+                .then(function (aResults) {
+                    let oAsnModel = _this.getOwnerComponent().getModel("AsnHeaderModel");
+                    let aExisting = oAsnModel.getProperty("/AsnData") || [];
+
+                    oAsnModel.setProperty("/AsnData", aExisting.concat(aResults));
+
+                    _this.iSkip += aResults.length;
+                    if (aResults.length < _this.iTop) {
+                        _this.bHasMoreData = false;
+                    }
+                    _this.oBusyDialog.close();
+                })
+                .catch(function () {
+                    _this.oBusyDialog.close();
+                });
+        },
 
 
 

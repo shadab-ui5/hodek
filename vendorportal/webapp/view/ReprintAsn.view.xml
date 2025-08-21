@@ -78,8 +78,8 @@
 
                         <Text id="_IDGenText81" text="{AsnHeaderModel>InvoiceNo}" />
                         <Text id="_IDGenText922" text="{path:'AsnHeaderModel>InvoiceDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
-                        <Text id="_IDGenText132" text="{AsnHeaderModel>Plant}" />
-                        <Text id="_IDGenText101" text="{AsnHeaderModel>Amount}" />
+                        <Text id="_IDGenText75"  text="{AsnHeaderModel>PlantName}({AsnHeaderModel>Plant})" />
+                        <Text id="_IDGenText76"  text="{AsnHeaderModel>Amount} {AsnHeaderModel>DocumentCurrency}" />
                         <Text id="_IDGenText923" text="{path:'AsnHeaderModel>SystemDate',formatter:'.formatter.formatDateToDDMMYYYY'}" />
                         <Text id="_IDGenText91" text="{path:'AsnHeaderModel>SystemTime',formatter:'.formatter.formatHours'}" />
                        

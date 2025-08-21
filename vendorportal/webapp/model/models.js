@@ -49,6 +49,7 @@ sap.ui.define([
                     oODataModel.read("/PoItem", {
                         filters: aFilters,
                         success: function (oData) {
+
                             if (oData && oData.results) {
                                 oData.results.sort(function (a, b) {
                                     var itemA = parseInt(a.PurchaseOrderItem, 10);
@@ -540,11 +541,12 @@ sap.ui.define([
                 oModel.read("/ItemforPo", {
                     filters: [oFinalFilter],
                     success: (oData) => {
-                        // Set data to a new model to use in table
                         let grouped = {};
+                        let filteredResults = [];
 
+                        // Step 1: Group by SchedulingAgreement + SchedulingAgreementItem
                         oData.results.forEach(item => {
-                            const key = item.PurchaseOrder + "-" + item.PurchaseOrderItem;
+                            const key = item.SchedulingAgreement + "-" + item.SchedulingAgreementItem;
 
                             if (!grouped[key]) {
                                 grouped[key] = [item];
@@ -553,15 +555,23 @@ sap.ui.define([
                             }
                         });
 
-                        // Step 2: For each group, get the entry with maximum postedquantity
-                        let filteredResults = [];
-
+                        // Step 2: From each group, take any one item and attach total postedquantity
                         for (let key in grouped) {
                             const group = grouped[key];
-                            let maxItem = group.reduce((prev, current) => {
-                                return (parseFloat(current.postedquantity) > parseFloat(prev.postedquantity)) ? current : prev;
-                            });
-                            filteredResults.push(maxItem);
+
+                            // Calculate total postedquantity
+                            const totalPostedQuantity = group.reduce((sum, item) => {
+                                return sum + parseFloat(item.postedquantity || 0);
+                            }, 0);
+
+                            // Take the first item in the group (you can change this to .at(-1) or random if needed)
+                            let representativeItem = { ...group[0] }; // clone to avoid mutating original
+
+                            // Add totalPostedQuantity field
+                            representativeItem.totalPostedQuantity = totalPostedQuantity;
+
+                            // Push to results
+                            filteredResults.push(representativeItem);
                         }
                         const oResultModel = new sap.ui.model.json.JSONModel({ Results: filteredResults });
                         _this.getView().setModel(oResultModel, "AsnItemsModel");
@@ -578,9 +588,10 @@ sap.ui.define([
                 oModel.read("/ItemforSchAgr", {
                     filters: [oFinalFilter],
                     success: (oData) => {
-                        // Step 1: Group by unique key (SchedulingAgreement + SchedulingAgreementItem)
                         let grouped = {};
+                        let filteredResults = [];
 
+                        // Step 1: Group by SchedulingAgreement + SchedulingAgreementItem
                         oData.results.forEach(item => {
                             const key = item.SchedulingAgreement + "-" + item.SchedulingAgreementItem;
 
@@ -591,18 +602,26 @@ sap.ui.define([
                             }
                         });
 
-                        // Step 2: For each group, get the entry with maximum postedquantity
-                        let filteredResults = [];
-
+                        // Step 2: From each group, take any one item and attach total postedquantity
                         for (let key in grouped) {
                             const group = grouped[key];
-                            let maxItem = group.reduce((prev, current) => {
-                                return (parseFloat(current.postedquantity) > parseFloat(prev.postedquantity)) ? current : prev;
-                            });
-                            filteredResults.push(maxItem);
+
+                            // Calculate total postedquantity
+                            const totalPostedQuantity = group.reduce((sum, item) => {
+                                return sum + parseFloat(item.postedquantity || 0);
+                            }, 0);
+
+                            // Take the first item in the group (you can change this to .at(-1) or random if needed)
+                            let representativeItem = { ...group[0] }; // clone to avoid mutating original
+
+                            // Add totalPostedQuantity field
+                            representativeItem.totalPostedQuantity = totalPostedQuantity;
+
+                            // Push to results
+                            filteredResults.push(representativeItem);
                         }
                         // Set data to a new model to use in table
-                        const oResultModel = new sap.ui.model.json.JSONModel({ Results: oData.results });
+                        const oResultModel = new sap.ui.model.json.JSONModel({ Results: filteredResults });
                         _this.getView().setModel(oResultModel, "AsnSaItemsModel");
                         _this.getView().setBusy(false);
                     },

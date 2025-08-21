@@ -79,7 +79,7 @@
                             <Input id="idRAPO_EwayNo" maxLength="50" width="75%"/>
                         </VBox>
                         <VBox id="_IDGenVBox34" width="20%">
-                            <Label id="_IDGenLabel43" text="Eway Date"/>
+                            <Label id="_IDGenLabel43" text="Eway Bill Date"/>
                             <DatePicker id="idRAPO_EWAY_Date" width="75%" placeholder="Select Date" change="handleChange_RAPO_EWAYDate" displayFormat="yyyy-MM-dd" enabled="true" class="sapUiSmallMarginBottom"/>
                         </VBox>
                     </HBox>

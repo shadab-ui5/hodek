@@ -124,7 +124,8 @@ sap.ui.define([
                     filters: [
                         new sap.ui.model.Filter("Plant", sap.ui.model.FilterOperator.EQ, obj.Plant),
                         new sap.ui.model.Filter("PurchaseOrder", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrder),
-                        new sap.ui.model.Filter("PurchaseOrderItem", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrderItem)
+                        new sap.ui.model.Filter("PurchaseOrderItem", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrderItem),
+                        new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.NE, '02')
                     ],
                     and: true
                 });
@@ -182,41 +183,30 @@ sap.ui.define([
             if (sValue === "") {
                 return;
             }
-            let selectedPO = this.getView().byId("idRAPO_PO_Order").getValue();
-            if (selectedPO === "") {
-                oInput.setValue();
-                MessageToast.show("Select Purchase Order or Scheduling Aggrement");
-                return;
-            }
-            let selectedPOs_vendor = this.selectedPOSchAggrVendor;
+            const supplier = this.getOwnerComponent().getModel("RoutePoData").getProperty("/PoHeader/Supplier");
             var aFinalFilter = new sap.ui.model.Filter({
                 filters: [
                     new sap.ui.model.Filter("InvoiceNo", sap.ui.model.FilterOperator.EQ, sValue),
-                    new sap.ui.model.Filter("Vendor", sap.ui.model.FilterOperator.EQ, selectedPOs_vendor)
+                    new sap.ui.model.Filter("Vendor", sap.ui.model.FilterOperator.EQ, supplier)
                 ],
                 and: true
             });
-            /*var filter1 = new sap.ui.model.Filter({
-                path: "InvoiceNo",
-                operator: sap.ui.model.FilterOperator.EQ,
-                value1: sValue
-            });*/
+            
 
-            // this.f4HelpModel.read("/GateEntryInvoiceNoF4Help", {
-            //     //filters: [filter1],
-            //     filters: [aFinalFilter],
-            //     success: function (oResponse) {
-            //         if (oResponse.results.length > 0) {
-            //             MessageBox.alert(`Invoice No. ${sValue} is already created`);
-            //             oInput.setValue();
-            //         }
-            //     },
-            //     error: function (oError) {
-            //         oInput.setValue();
-            //         MessageBox.error("Failed to validate the entered Invoice No.");
-            //         console.log(oError);
-            //     }
-            // });
+            this.f4HelpModel.read("/asnHdr", {
+                filters: [aFinalFilter],
+                success: function (oResponse) {
+                    if (oResponse.results.length > 0) {
+                        MessageBox.alert(`Invoice No. ${sValue} is already created`);
+                        oInput.setValue();
+                    }
+                },
+                error: function (oError) {
+                    oInput.setValue();
+                    MessageBox.error("Failed to validate the entered Invoice No.");
+                    console.log(oError);
+                }
+            });
         },
 
         onChangeRAII_DocInvNo: function (oEvent) {
@@ -790,7 +780,7 @@ sap.ui.define([
             let oItem = oModel.getProperty(sPath);
 
             let orderQuantity = parseFloat(oItem.OrderQuantity) || 0;
-            let postedQuantity = parseFloat(oItem.postedquantity) || 0;
+            let postedQuantity = parseFloat(oItem.totalPostedQuantity) || 0;
             let enteredQuantity = parseFloat(oItem.EnteredQuantity) || 0;
 
             // Clear previous value state
@@ -808,7 +798,7 @@ sap.ui.define([
                 oInput.setValueState(sap.ui.core.ValueState.Error);
                 this.errorQuantity = true;
                 oInput.setValueStateText(
-                    `Enter a valid number which should be less than or equals to ${allowedQty}`
+                    `Enter a valid number which should be less than or equals to ${(Math.round(allowedQty * 100) / 100).toFixed(2)}`
                 );
             }
         },
@@ -1287,7 +1277,7 @@ sap.ui.define([
                         Vehicleno = oView.byId("idRAPO_VehicalNo").getValue(),
                         purchaseOrder = oView.byId("idRAPO_PO_Order").getValue(),
                         Transporter = oView.byId("idRAPO_Trasporter").getValue();
-                    if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || EwayDate === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
+                    if (InvoiceNo === "" || (!InvoiceDate) || Ponumber === "" || Ewayno === "" || Amount === "" || Vehicleno === "" || Transporter === "") {
                         MessageToast.show("Fill all mandatory fields");
                         return;
                     }
@@ -1318,7 +1308,7 @@ sap.ui.define([
                         return;
                     }
                     let payload = {
-                        // "Asn":"abas",
+                        "AsnNo": "",
                         "InvoiceNo": InvoiceNo,
                         "Ponumber": purchaseOrder,
                         "Plant": Plant,
@@ -1349,44 +1339,35 @@ sap.ui.define([
                             let oTable = that.getView().byId("idTable_RAPO");
                             let aItems = oTable.getModel("AsnItemsModel").getProperty("/Results") || [];
                             // 3️⃣ Prepare array of POST promises
-                            var aPostPromises = aItems.map(function (oItem) {
-                                return Models.updateforItems(that, oItem, "ItemforPo"); // must return a Promise
+                            var dialog = new Dialog("idPrintQRDialog", {
+                                title: 'Success',
+                                type: 'Message',
+                                state: 'Success',
+                                content: new sap.m.Text({
+                                    text: `ASN  ${gateEntryNo} generated successfully`
+                                }),
+                                beginButton: new Button({
+                                    text: 'Download ASN',
+                                    press: function () {
+                                        that.onViewQR(qrData); //call function to download QR code
+                                        dialog.close();
+                                    }
+                                }),
+                                afterClose: function () {
+                                    dialog.destroy();
+                                }
                             });
-                            Promise.all(aPostPromises)
-                                .then(function (aResponses) {
-                                    var dialog = new Dialog("idPrintQRDialog", {
-                                        title: 'Success',
-                                        type: 'Message',
-                                        state: 'Success',
-                                        content: new sap.m.Text({
-                                            text: `Asn  ${gateEntryNo} generated successfully`
-                                        }),
-                                        beginButton: new Button({
-                                            text: 'Download ASN',
-                                            press: function () {
-                                                that.onViewQR(qrData); //call function to download QR code
-                                                dialog.close();
-                                            }
-                                        }),
-                                        afterClose: function () {
-                                            dialog.destroy();
-                                        }
-                                    });
-                                    dialog.open();
+                            dialog.open();
 
-                                    dialog.attachBrowserEvent("keydown", function (oEvent) {
-                                        if (oEvent.key === "Escape") {
-                                            oEvent.preventDefault();
-                                            that.onViewQR(qrDataToPrintQRCode);
-                                            dialog.close();
+                            dialog.attachBrowserEvent("keydown", function (oEvent) {
+                                if (oEvent.key === "Escape") {
+                                    oEvent.preventDefault();
+                                    that.onViewQR(qrDataToPrintQRCode);
+                                    dialog.close();
 
-                                        }
-                                    });
-                                }).catch(function (err) {
-                                    that.getView().byId("idTable_RAPO").setBusy(false);
-                                    sap.m.MessageToast.show("Error saving items");
-                                    console.error(err);
-                                });
+                                }
+                            });
+
                         },
                         error: function (e) {
                             that.getView().setBusy(false);
@@ -1435,7 +1416,7 @@ sap.ui.define([
                     that._generatePDF(qrData);
                     oQRCodeBox.setVisible(false);
                     that.clearUIFields();
-                                                
+
                 }.bind(this));
             }, 200);
         },
@@ -1444,6 +1425,7 @@ sap.ui.define([
             var jsPDF = window.jspdf.jsPDF;
             //var doc = new jsPDF();
             var doc = new jsPDF('l', 'mm', [50, 25]);
+            const supplierName = this.getOwnerComponent().getModel("RoutePoData").getProperty("/PoHeader/SupplierName");
 
             let invDate = new Date(qrData.InvoiceDate);
             let formattedInvDate = invDate.getDate().toString().padStart(2, '0') + '/' +
@@ -1468,7 +1450,7 @@ sap.ui.define([
 
             // Add the QR code image to the PDF
             doc.addImage(imgData, 'PNG', 35, 1, 15, 15); // Adjust size and position as necessary
-            doc.text(2, 17, `Supplier: ${qrData.Vendor}`);
+            doc.text(2, 17, `Supplier: ${supplierName} ( ${qrData.Vendor} )`);
             // Save the PDF to a file
             doc.save(`ASN_${qrData.AsnNo}.pdf`);
         },
@@ -1497,466 +1479,6 @@ sap.ui.define([
             this.onNavFirstPage();
         },
 
-        onCancelGateEntry: function () {
-            let that = this;
-            let sPlant = this.getView().byId("idDropdownPlant").getValue();
-            if (!sPlant) {
-                MessageToast.show("Select a Plant");
-                return;
-            }
-            if (!this.oFixedSizeDialog) {
-                let gateEntryNoInput = new sap.m.Input({
-                    maxLength: 20,
-                    showValueHelp: true,
-                    //valueHelpOnly: true,
-                    //valueHelpRequest: that.getView().getController().GateEntryNoF4Help(),
-                    valueHelpRequest: function (oEvent) {
-                        that.GateEntryNoF4Help(oEvent);
-                    },
-                    liveChange: function (oEvent) {
-                        if (isNaN(oEvent.getSource().getValue())) {
-                            oEvent.getSource().setValue();
-                            MessageToast.show("Enter valid number");
-                        }
-                    }
-                });
-                let gateEntryCancelRemark = new sap.m.TextArea({
-                    width: '100%',
-                    rows: 3,
-                    maxLength: 50
-                });
-                this.oFixedSizeDialog = new sap.m.Dialog({
-                    title: "Cancel Gate Entry",
-                    contentWidth: "500px",
-                    contentHeight: "230px",
-                    content:
-                        new sap.m.Panel({
-                            content: [
-                                new sap.m.VBox({
-                                    items: [
-                                        new sap.m.Label({
-                                            text: 'Gate Entry Number',
-                                            required: true
-                                        }),
-                                        gateEntryNoInput,
-                                        new sap.m.Label({
-                                            text: 'Remark',
-                                            required: true
-                                        }).addStyleClass("sapUiSmallMarginTop"),
-                                        gateEntryCancelRemark
-                                    ]
-                                })
-                            ]
-                        }).addStyleClass('sapUiContentPadding', 'sapUiSmallMarginTop'),
-                    beginButton: new sap.m.Button({
-                        type: ButtonType.Emphasized,
-                        text: "Submit",
-                        press: function () {
-                            let gateEntryNo = gateEntryNoInput.getValue();
-                            let gateEntryIdCancelRemark = gateEntryCancelRemark.getValue();
-                            if (gateEntryNo === "" || gateEntryIdCancelRemark === "") {
-                                MessageToast.show('Enter the Gate Entry Number & Remark');
-                                return;
-                            }
-                            let payload = {
-                                Status: '05',
-                                Remarks: gateEntryIdCancelRemark
-                            };
-                            that.getView().setBusy(true);
-                            that.inGateEntryModel.update(`/InwardGateHeader('${gateEntryNo}')`, payload, {
-                                //method: "PUT",
-                                success: function (oData, oResponse) {
-                                    that.getView().setBusy(false);
-                                    MessageBox.success(`Gate Entry Number ${gateEntryNo} has been cancelled`);
-                                },
-                                error: function (e) {
-                                    that.getView().setBusy(false);
-                                    if (e.responseText && (e.statusCode === 400 || e.statusCode === "400")) {
-                                        var err = JSON.parse(e.responseText);
-                                        var msg = err.error.message.value;
-                                    } else if (e.responseText && (e.statusCode === 500 || e.statusCode === "500")) {
-                                        var parser = new DOMParser();
-                                        var xmlDoc = parser.parseFromString(e.responseText, "text/xml");
-                                        var msg = xmlDoc.documentElement.childNodes[1].innerHTML;
-                                    } else {
-                                        var msg = e.message;
-                                    }
-                                    var bCompact = !!that.getView().$().closest(".sapUiSizeCompact").length;
-                                    MessageBox.error(
-                                        msg, {
-                                        styleClass: bCompact ? "sapUiSizeCompact" : ""
-                                    }
-                                    );
-                                }
-                            });
-
-                            gateEntryNoInput.setValue();
-                            gateEntryCancelRemark.setValue();
-                            that.oFixedSizeDialog.close();
-                        }.bind(this)
-                    }),
-                    endButton: new sap.m.Button({
-                        //type: ButtonType.Emphasized,
-                        text: "Close",
-                        press: function () {
-                            gateEntryNoInput.setValue();
-                            gateEntryCancelRemark.setValue();
-                            this.oFixedSizeDialog.close();
-                        }.bind(this)
-                    })
-                });
-
-                //to get access to the controller's model
-                this.getView().addDependent(this.oFixedSizeDialog);
-            }
-            this.oFixedSizeDialog.open();
-
-            that.aGateEntryNum = [];
-            let sParameters = {
-                "$top": 500
-            };
-            let filter = new sap.ui.model.Filter({
-                path: "Plant",
-                operator: sap.ui.model.FilterOperator.EQ,
-                value1: sPlant
-            });
-            that.f4HelpModel.read("/GateEntryNoF4Help", {
-                filters: [filter],
-                urlParameters: sParameters,
-                success: function (oResponse) {
-                    that.aGateEntryNum = oResponse.results.sort((a, b) => {
-                        return b.AsnNo - a.AsnNo;
-                    });
-                },
-                error: function (oError) {
-                    MessageBox.error("Failed to load gate entry number list");
-                }
-            });
-        },
-
-        GateEntryNoF4Help: function (oEvent) {
-            try {
-                let that = this;
-                let selectedInput = oEvent.getSource();
-                let oCustomListItem = new sap.m.StandardListItem({
-                    active: true,
-                    title: "{AsnNo}"
-                });
-
-                let oSelectDialog = new sap.m.SelectDialog({
-                    title: "Select ASN ID",
-                    noDataText: "No Data",
-                    width: "50%",
-                    growing: true,
-                    growingThreshold: 12,
-                    growingScrollToLoad: true,
-                    confirm: function (oEvent) {
-                        let aContexts = oEvent.getParameter("selectedContexts");
-                        if (aContexts.length) {
-                            let selectedValue = aContexts.map(function (oContext) {
-                                return oContext.getObject();
-                            });
-                            selectedInput.setValue(selectedValue[0].AsnNo);
-                        }
-                    },
-                    liveChange: function (oEvent) {
-                        let sValue = oEvent.getParameter("value");
-                        let custFilter = new sap.ui.model.Filter("AsnNo", sap.ui.model.FilterOperator.Contains, sValue);
-                        let oBinding = oEvent.getSource().getBinding("items");
-                        oBinding.filter(custFilter);
-                    }
-                });
-                let oModel = new sap.ui.model.json.JSONModel();
-                oModel.setData({
-                    modelData: that.aGateEntryNum
-                });
-                oSelectDialog.setModel(oModel);
-                oSelectDialog.bindAggregation("items", "/modelData", oCustomListItem);
-                oSelectDialog.open();
-            } catch (e) {
-                console.log(e);
-            }
-        },
-
-        onRePrintGateEntryQR: function () {
-            let that = this;
-            let sPlant = this.getView().byId("idDropdownPlant").getValue();
-            if (!sPlant) {
-                MessageToast.show("Select a Plant");
-                return;
-            }
-            if (!this.sReprintQRDialog) {
-                let gateEntryNoInput = new sap.m.Input({
-                    id: 'reprintAsnInput',
-                    maxLength: 20,
-                    showValueHelp: true,
-                    valueHelpRequest: function (oEvent) {
-                        that.GateEntryNoF4Help(oEvent);
-                    }/*,
-                    liveChange: function (oEvent) {
-                        if (isNaN(oEvent.getSource().getValue())) {
-                            oEvent.getSource().setValue();
-                            MessageToast.show("Enter valid number");
-                        }
-                    }*/
-                });
-                this.sReprintQRDialog = new sap.m.Dialog({
-                    title: "ASN QR",
-                    contentWidth: "500px",
-                    contentHeight: "125px",
-                    content:
-                        new sap.m.Panel({
-                            content: [
-                                new sap.m.VBox({
-                                    items: [
-                                        new sap.m.Label({
-                                            text: 'ASN',
-                                            required: true
-                                        }),
-                                        gateEntryNoInput
-                                    ]
-                                })
-                            ]
-                        }).addStyleClass('sapUiContentPadding', 'sapUiSmallMarginTop'),
-                    beginButton: new sap.m.Button({
-                        type: sap.m.ButtonType.Emphasized,
-                        text: "Reprint QR",
-                        press: function () {
-                            let sGateEntryNo = gateEntryNoInput.getValue();
-                            if (sGateEntryNo === "") {
-                                MessageToast.show('Select the ASN');
-                                return;
-                            }
-                            let qrData = that.aGateEntryNum.find(item => {
-                                return item.AsnNo === sGateEntryNo;
-                            });
-                            if (!qrData) {
-                                MessageToast.show('Select valid ASN');
-                                return;
-                            }
-                            that.onViewQR(qrData);
-                            gateEntryNoInput.setValue();
-                            that.sReprintQRDialog.close();
-                        }.bind(this)
-                    }),
-                    endButton: new sap.m.Button({
-                        text: "Cancel",
-                        press: function () {
-                            gateEntryNoInput.setValue();
-                            this.sReprintQRDialog.close();
-                        }.bind(this)
-                    })
-                });
-
-                //to get access to the controller's model
-                this.getView().addDependent(this.sReprintQRDialog);
-            }
-            this.sReprintQRDialog.open();
-
-            that.aGateEntryNum = [];
-            let sParameters = {
-                "$top": 500
-            };
-            let filter = new sap.ui.model.Filter({
-                path: "Plant",
-                operator: sap.ui.model.FilterOperator.EQ,
-                value1: sPlant
-            });
-            that.getView().setBusy(true);
-            that.f4HelpModel.read("/InwardGateHeader", { //InwardGateHeader
-                filters: [filter],
-                urlParameters: sParameters,
-                success: function (oResponse) {
-                    that.getView().setBusy(false);
-                    that.aGateEntryNum = oResponse.results.sort((a, b) => {
-                        return b.AsnNo - a.AsnNo;
-                    });
-                    that.sReprintQRDialog.open();
-                },
-                error: function (oError) {
-                    that.getView().setBusy(false);
-                    MessageBox.error("Failed to load Asn in Value Help");
-                }
-            });
-        },
-
-
-        //Below functions are Not in use
-
-        downloadQR: function () {
-            let that = this;
-            let gateEntryNo = sap.ui.getCore().byId("reprintAsnInput").getValue();
-            //let oQRCodeBox = new sap.m.VBox({});
-            let oQRCodeBox = this.getView().byId("idVBox_QRCode");
-            oQRCodeBox.setVisible(true);
-            const oHtmlComp = new sap.ui.core.HTML({
-                content: '<canvas id="qrCanvas" width="200" height="200" style="display:none;"></canvas>'
-            });
-            oQRCodeBox.addItem(oHtmlComp);
-
-            setTimeout(function () {
-                let sQRCodeData = gateEntryNo; // Data to encode in QR Code
-                // Generate QR Code using qrcode.js
-                QRCode.toCanvas(document.getElementById('qrCanvas'), sQRCodeData, function (error) {
-                    if (error) {
-                        sap.m.MessageToast.show("QR Code generation failed!");
-                        return;
-                    }
-                    sap.m.MessageToast.show("QR Code generated!");
-                    // After generating the QR Code, create PDF
-                    that._generatePDF_new();
-                    oQRCodeBox.setVisible(false);
-                }.bind(this));
-            }, 200);
-        },
-
-        _generatePDF_new: function () {
-            var jsPDF = window.jspdf.jsPDF;
-            //var doc = new jsPDF();
-            var doc = new jsPDF('l', 'mm', [50, 25]);
-
-            doc.setFont("Helvetica", 'bold');
-            doc.setFontSize(4.5);
-            doc.setTextColor('#000');
-
-            doc.text(2, 5, `Gate Entry No: IN123456789098765499`);
-            doc.text(2, 9, `QR Code/ASN: 123456789098765499`);
-            doc.text(2, 13, `Inv No.: 9876543210`);
-            doc.text(2, 17, `Inv Date: 12/12/2024`);
-
-            // Get the canvas element for the QR code
-            var canvas = document.getElementById('qrCanvas');
-            var imgData = canvas.toDataURL('image/png');
-
-            doc.addImage(imgData, 'PNG', 35, 1, 15, 15); // Adjust size and position as necessary
-            doc.text(33, 18, `Gt Date: 23/12/2025`);
-
-            // Save the PDF to a file
-            doc.save('QRCode.pdf');
-        },
-        onSearch: function (oEvent) {
-            // add filter for search
-            const aFilters = [];
-            const sQuery = oEvent.getSource().getValue();
-            if (sQuery && sQuery.length > 0) {
-                const filter = new Filter("fileName", FilterOperator.Contains, sQuery);
-                aFilters.push(filter);
-            }
-
-            // update list binding
-            const oTable = this.byId("table-uploadSet");
-            const oBinding = oTable.getBinding("items");
-            oBinding.filter(aFilters, "Application");
-        },
-        onPluginActivated: function (oEvent) {
-            this.oUploadPluginInstance = oEvent.getParameter("oPlugin");
-        },
-        getIconSrc: function (mediaType, thumbnailUrl) {
-            return UploadSetwithTable.getIconForFileType(mediaType, thumbnailUrl);
-        },
-        // Table row selection handler
-        onSelectionChange: function (oEvent) {
-            const oTable = oEvent.getSource();
-            const aSelectedItems = oTable?.getSelectedContexts();
-            const oDownloadBtn = this.byId("downloadSelectedButton");
-            const oEditUrlBtn = this.byId("editUrlButton");
-            const oRenameBtn = this.byId("renameButton");
-            const oRemoveDocumentBtn = this.byId("removeDocumentButton");
-
-            if (aSelectedItems.length > 0) {
-                oDownloadBtn.setEnabled(true);
-            } else {
-                oDownloadBtn.setEnabled(false);
-            }
-            if (aSelectedItems.length === 1) {
-                oEditUrlBtn.setEnabled(true);
-                oRenameBtn.setEnabled(true);
-                oRemoveDocumentBtn.setEnabled(true);
-            } else {
-                oRenameBtn.setEnabled(false);
-                oEditUrlBtn.setEnabled(false);
-                oRemoveDocumentBtn.setEnabled(false);
-            }
-        },
-        // Download files handler
-        onDownloadFiles: function (oEvent) {
-            const oContexts = this.byId("table-uploadSet").getSelectedContexts();
-            if (oContexts && oContexts.length) {
-                oContexts.forEach((oContext) => this.oUploadPluginInstance.download(oContext, true));
-            }
-        },
-        // UploadCompleted event handler
-        onUploadCompleted: function (oEvent) {
-            const oModel = this.byId("table-uploadSet").getModel("documents");
-            const iResponseStatus = oEvent.getParameter("status");
-
-            // check for upload is sucess
-            if (iResponseStatus === 201) {
-                oModel.refresh(true);
-                setTimeout(function () {
-                    MessageToast.show("Document Added");
-                }, 1000);
-            }
-            // This code block is only for demonstration purpose to simulate XHR requests, hence restoring the server to not fake the xhr requests.
-            this.oMockServer.restore();
-        },
-        onRemoveButtonPress: function (oEvent) {
-            var oTable = this.byId("table-uploadSet");
-            const aContexts = oTable.getSelectedContexts();
-            this.removeItem(aContexts[0]);
-        },
-        onRemoveHandler: function (oEvent) {
-            var oSource = oEvent.getSource();
-            const oContext = oSource.getBindingContext("documents");
-            this.removeItem(oContext);
-        },
-        removeItem: function (oContext) {
-            const oModel = this.getView().getModel("documents");
-            const oTable = this.byId("table-uploadSet");
-            MessageBox.warning(
-                "Are you sure you want to remove the document" + " " + oContext.getProperty("fileName") + " " + "?",
-                {
-                    icon: MessageBox.Icon.WARNING,
-                    actions: ["Remove", MessageBox.Action.CANCEL],
-                    emphasizedAction: "Remove",
-                    styleClass: "sapMUSTRemovePopoverContainer",
-                    initialFocus: MessageBox.Action.CANCEL,
-                    onClose: function (sAction) {
-                        if (sAction !== "Remove") {
-                            return;
-                        }
-                        var spath = oContext.getPath();
-                        if (spath.split("/")[2]) {
-                            var index = spath.split("/")[2];
-                            var data = oModel.getProperty("/items");
-                            data.splice(index, 1);
-                            oModel.refresh(true);
-                            if (oTable && oTable.removeSelections) {
-                                oTable.removeSelections();
-                            }
-                        }
-                    }
-                }
-            );
-        },
-        getFileCategories: function () {
-            return [
-                { categoryId: "Invoice", categoryText: "Invoice" },
-                { categoryId: "Specification", categoryText: "Specification" },
-                { categoryId: "Attachment", categoryText: "Attachment" },
-                { categoryId: "Legal Document", categoryText: "Legal Document" }
-            ];
-        },
-        getFileSizeWithUnits: function (iFileSize) {
-            return UploadSetwithTable.getFileSizeWithUnits(iFileSize);
-        },
-        openPreview: function (oEvent) {
-            const oSource = oEvent.getSource();
-            const oBindingContext = oSource.getBindingContext("documents");
-            if (oBindingContext && this.oUploadPluginInstance) {
-                this.oUploadPluginInstance.openFilePreview(oBindingContext);
-            }
-        },
         _loadDocuments: async function () {
             try {
                 const oModel = this.getOwnerComponent().getModel("catModel");
