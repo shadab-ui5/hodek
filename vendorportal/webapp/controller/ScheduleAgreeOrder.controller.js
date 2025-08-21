@@ -28,7 +28,7 @@ sap.ui.define([
             const oODataModel = this.getOwnerComponent().getModel("vendorModel");
             // Assuming the model name is "SaItemModel"
             const oSaItemModel = this.getOwnerComponent().getModel("SaItemModel");
-            oSaItemModel.setProperty("/POItems", []); // Clear the data
+            oSaItemModel.setProperty("/SaItems", []); // Clear the data
             oSaItemModel.refresh(); // Only if necessary
             Models.loadSaItems(oODataModel, oSaItemModel, sSaNumber, oTable);
             // Use sPOId to filter model or fetch data

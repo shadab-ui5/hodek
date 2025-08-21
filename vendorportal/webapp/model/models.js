@@ -544,37 +544,33 @@ sap.ui.define([
                         let grouped = {};
                         let filteredResults = [];
 
-                        // Step 1: Group by SchedulingAgreement + SchedulingAgreementItem
+                        // ✅ Single-pass processing
                         oData.results.forEach(item => {
-                            const key = item.SchedulingAgreement + "-" + item.SchedulingAgreementItem;
+                            if (item.status === "02") return; // Skip invalid items early
+
+                            const key = item.PurchaseOrder + "-" + item.PurchaseOrderItem;
 
                             if (!grouped[key]) {
-                                grouped[key] = [item];
-                            } else {
-                                grouped[key].push(item);
+                                // Clone representative item
+                                grouped[key] = { ...item, totalPostedQuantity: 0 };
+                                filteredResults.push(grouped[key]); // Keep reference in results
                             }
+
+                            // Accumulate postedquantity
+                            grouped[key].totalPostedQuantity += parseFloat(item.postedquantity || 0);
                         });
 
-                        // Step 2: From each group, take any one item and attach total postedquantity
-                        for (let key in grouped) {
-                            const group = grouped[key];
 
-                            // Calculate total postedquantity
-                            const totalPostedQuantity = group.reduce((sum, item) => {
-                                return sum + parseFloat(item.postedquantity || 0);
-                            }, 0);
+                        let oResultModel = _this.getView().getModel("AsnItemsModel");
 
-                            // Take the first item in the group (you can change this to .at(-1) or random if needed)
-                            let representativeItem = { ...group[0] }; // clone to avoid mutating original
-
-                            // Add totalPostedQuantity field
-                            representativeItem.totalPostedQuantity = totalPostedQuantity;
-
-                            // Push to results
-                            filteredResults.push(representativeItem);
+                        // If model is not initialized, fall back to new
+                        if (!oResultModel) {
+                            oResultModel = new sap.ui.model.json.JSONModel();
+                            _this.getView().setModel(oResultModel, "AsnItemsModel");
                         }
-                        const oResultModel = new sap.ui.model.json.JSONModel({ Results: filteredResults });
-                        _this.getView().setModel(oResultModel, "AsnItemsModel");
+
+                        // Update only the data
+                        oResultModel.setProperty("/Results", filteredResults);
                         _this.getView().setBusy(false);
                     },
                     error: (oError) => {
@@ -591,38 +587,34 @@ sap.ui.define([
                         let grouped = {};
                         let filteredResults = [];
 
-                        // Step 1: Group by SchedulingAgreement + SchedulingAgreementItem
+                        // ✅ Single-pass processing
                         oData.results.forEach(item => {
+                            if (item.status === "02") return; // Skip invalid items early
+
                             const key = item.SchedulingAgreement + "-" + item.SchedulingAgreementItem;
 
                             if (!grouped[key]) {
-                                grouped[key] = [item];
-                            } else {
-                                grouped[key].push(item);
+                                // Clone representative item
+                                grouped[key] = { ...item, totalPostedQuantity: 0 };
+                                filteredResults.push(grouped[key]); // Keep reference in results
                             }
+
+                            // Accumulate postedquantity
+                            grouped[key].totalPostedQuantity += parseFloat(item.postedquantity || 0);
                         });
 
-                        // Step 2: From each group, take any one item and attach total postedquantity
-                        for (let key in grouped) {
-                            const group = grouped[key];
 
-                            // Calculate total postedquantity
-                            const totalPostedQuantity = group.reduce((sum, item) => {
-                                return sum + parseFloat(item.postedquantity || 0);
-                            }, 0);
-
-                            // Take the first item in the group (you can change this to .at(-1) or random if needed)
-                            let representativeItem = { ...group[0] }; // clone to avoid mutating original
-
-                            // Add totalPostedQuantity field
-                            representativeItem.totalPostedQuantity = totalPostedQuantity;
-
-                            // Push to results
-                            filteredResults.push(representativeItem);
-                        }
                         // Set data to a new model to use in table
-                        const oResultModel = new sap.ui.model.json.JSONModel({ Results: filteredResults });
-                        _this.getView().setModel(oResultModel, "AsnSaItemsModel");
+                        let oResultModel = _this.getView().getModel("AsnSaItemsModel");
+
+                        // If model is not initialized, fall back to new
+                        if (!oResultModel) {
+                            oResultModel = new sap.ui.model.json.JSONModel();
+                            _this.getView().setModel(oResultModel, "AsnSaItemsModel");
+                        }
+
+                        // Update only the data
+                        oResultModel.setProperty("/Results", filteredResults);
                         _this.getView().setBusy(false);
                     },
                     error: (oError) => {

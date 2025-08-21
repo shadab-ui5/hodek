@@ -25,6 +25,8 @@ sap.ui.define([
             };
             let that = this;
             this.selectedPOSchAggrVendor = "";
+            const oModel = new sap.ui.model.json.JSONModel([]);
+            this.getView().setModel(oModel, "AsnItemsModel");
             this.selected_Po_Scheduling_Type = undefined;
             this.selected_Po_Scheduling_Value = undefined;
             this.aPurchaseOrdersData = [];
@@ -75,7 +77,7 @@ sap.ui.define([
 
         },
         _onRouteMatched: function (oEvent) {
-            // this._loadDocuments();
+            this.getView().getModel("AsnItemsModel").setProperty("/Results", []);
             var sPoNumber = oEvent.getParameter("arguments").po;
             this.purchaseOrder = sPoNumber;
             console.log("Routed PO ID:", sPoNumber);
@@ -124,8 +126,7 @@ sap.ui.define([
                     filters: [
                         new sap.ui.model.Filter("Plant", sap.ui.model.FilterOperator.EQ, obj.Plant),
                         new sap.ui.model.Filter("PurchaseOrder", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrder),
-                        new sap.ui.model.Filter("PurchaseOrderItem", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrderItem),
-                        new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.NE, '02')
+                        new sap.ui.model.Filter("PurchaseOrderItem", sap.ui.model.FilterOperator.EQ, obj.PurchaseOrderItem)
                     ],
                     and: true
                 });
@@ -191,7 +192,7 @@ sap.ui.define([
                 ],
                 and: true
             });
-            
+
 
             this.f4HelpModel.read("/asnHdr", {
                 filters: [aFinalFilter],

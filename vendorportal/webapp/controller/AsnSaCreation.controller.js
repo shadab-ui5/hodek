@@ -23,6 +23,8 @@ sap.ui.define([
                 "$top": 200000
             };
             let that = this;
+             const oModel = new sap.ui.model.json.JSONModel([]);
+            this.getView().setModel(oModel, "AsnSaItemsModel");
             this.selectedPOSchAggrVendor = "";
             this.selected_Po_Scheduling_Type = undefined;
             this.selected_Po_Scheduling_Value = undefined;
@@ -74,7 +76,7 @@ sap.ui.define([
 
         },
         _onRouteMatched: function (oEvent) {
-            // this._loadDocuments();
+            this.getView().getModel("AsnSaItemsModel").setProperty("/Results", []);
             var sPoNumber = oEvent.getParameter("arguments").po;
             this.purchaseOrder = sPoNumber;
             console.log("Routed PO ID:", sPoNumber);
@@ -122,8 +124,7 @@ sap.ui.define([
                 const oGroupFilter = new sap.ui.model.Filter({
                     filters: [
                         new sap.ui.model.Filter("SchedulingAgreement", sap.ui.model.FilterOperator.EQ, obj.SchedulingAgreement),
-                        new sap.ui.model.Filter("SchedulingAgreementItem", sap.ui.model.FilterOperator.EQ, obj.SchedulingAgreementItem),
-                        new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.NE,'02')
+                        new sap.ui.model.Filter("SchedulingAgreementItem", sap.ui.model.FilterOperator.EQ, obj.SchedulingAgreementItem)
                     ],
                     and: true
                 });
